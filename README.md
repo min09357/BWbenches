@@ -44,9 +44,10 @@ python3 ./Test.py {node id} {num cores} {num pages to use} {bench options}
 
 ## Bench options
 
+```
 BW\_{rank option}\_{access pattern}\_{access method}\_{access sequences}
-
-    ex) BW_ALL_HIT_PT_SINGLE
+ex) BW_ALL_HIT_PT_SINGLE
+```
 
 ### rank option
 
