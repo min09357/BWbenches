@@ -156,3 +156,17 @@ int getMaxOnlyFuncBit() {
     return 63 - __builtin_clzll(onlyfunctionmask);
 }
 
+
+vector<int> get_thread_list() {
+    vector<int> thread_list;
+    int max_hardware_threads = omp_get_max_threads();
+    if (g_config.test_all_cores) {
+        int start_val = g_config.min_cores < max_hardware_threads ? g_config.min_cores : max_hardware_threads;
+        for (int t = start_val; t <= max_hardware_threads; t++) {
+            thread_list.push_back(t);
+        }
+    } else {
+        thread_list.push_back(max_hardware_threads);
+    }
+    return thread_list;
+}

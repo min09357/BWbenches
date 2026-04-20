@@ -27,7 +27,9 @@ int main(int argc, char* argv[])
         {"cpu_frequency",       required_argument, 0, 'f'},
         {"NUMA_node",           required_argument, 0, 'N'},
         {"NUMA_stride",         required_argument, 0, 'D'},
-        {"all",                 no_argument,       0, 'a'},
+        {"num_chains_per_core", required_argument, 0, 'n'},
+        {"min_cores",           required_argument, 0, 'm'},
+        {"sweep_all_cores",     no_argument,       0, 'a'},
         {"verbose",             no_argument,       0, 'v'},
         {0, 0, 0, 0}
     };
@@ -54,7 +56,9 @@ int main(int argc, char* argv[])
             case 'k': g_config.chunk_size = stoi(optarg); break;
             case 'f': g_config.cpu_period = 1.0 / stof(optarg); break;
             case 'N': g_config.NUMA_node = stoi(optarg); break;
+            case 'n': g_config.num_chains_per_core = stoi(optarg); break;
             case 'D': g_config.NUMA_stride = stoi(optarg); break;
+            case 'm': g_config.min_cores = stoi(optarg); break;
             default: print_help(argv[0]); return -1;
         }
     }
@@ -303,9 +307,8 @@ int main(int argc, char* argv[])
         else if (current_bench == "BW_ALL_HIT_PC_SINGLE") {
             vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank);
             int col_stride = 1;
-            int num_chains_per_cores = 8;
             int chain_stride = 1;
-            BenchResult res = measureBandwidth_PointerChasing(stream, num_chains_per_cores, chain_stride);
+            BenchResult res = measureBandwidth_PointerChasing(stream, g_config.num_chains_per_core, chain_stride);
             print_result(res);
         }
 
@@ -345,9 +348,8 @@ int main(int argc, char* argv[])
         else if (current_bench == "BW_ALL_MISS_PC_SINGLE") {
             int col_stride = 1;
             vector<void*> stream = createStreamRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank,col_stride);
-            int num_chains_per_cores = 8;
             int chain_stride = 1;
-            BenchResult res = measureBandwidth_PointerChasing(stream, num_chains_per_cores, chain_stride);
+            BenchResult res = measureBandwidth_PointerChasing(stream, g_config.num_chains_per_core, chain_stride);
             print_result(res);
         }
 
@@ -368,8 +370,11 @@ int main(int argc, char* argv[])
         }
 
         else if (current_bench == "BW_ALL_RAND_PC_SINGLE" || current_bench == "BW_ALL_RAND_PC_PERCORE") {
-            // todo
-            cout << "Todo" << endl;
+            vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank);
+            shuffle(stream.begin(), stream.end(), g_gen);
+            int chain_stride = 1;
+            BenchResult res = measureBandwidth_PointerChasing(stream, g_config.num_chains_per_core, chain_stride);
+            print_result(res);
         }
 
 
@@ -405,9 +410,8 @@ int main(int argc, char* argv[])
         else if (current_bench == "BW_1R_HIT_PC_SINGLE") {
             vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, 1, g_config.num_bg, g_config.num_bank);
             int col_stride = 1;
-            int num_chains_per_cores = 8;
             int chain_stride = 1;
-            BenchResult res = measureBandwidth_PointerChasing(stream, num_chains_per_cores, chain_stride);
+            BenchResult res = measureBandwidth_PointerChasing(stream, g_config.num_chains_per_core, chain_stride);
             print_result(res);
         }
 
@@ -447,9 +451,8 @@ int main(int argc, char* argv[])
         else if (current_bench == "BW_1R_MISS_PC_SINGLE") {
             int col_stride = 1;
             vector<void*> stream = createStreamRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,g_config.num_bank,col_stride);
-            int num_chains_per_cores = 8;
             int chain_stride = 1;
-            BenchResult res = measureBandwidth_PointerChasing(stream, num_chains_per_cores, chain_stride);
+            BenchResult res = measureBandwidth_PointerChasing(stream, g_config.num_chains_per_core, chain_stride);
             print_result(res);
         }
 
@@ -470,8 +473,11 @@ int main(int argc, char* argv[])
         }
 
         else if (current_bench == "BW_1R_RAND_PC_SINGLE" || current_bench == "BW_1R_RAND_PC_PERCORE") {
-            // todo
-            cout << "Todo" << endl;
+            vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, 1, g_config.num_bg, g_config.num_bank);
+            shuffle(stream.begin(), stream.end(), g_gen);
+            int chain_stride = 1;
+            BenchResult res = measureBandwidth_PointerChasing(stream, g_config.num_chains_per_core, chain_stride);
+            print_result(res);
         }
 
 

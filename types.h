@@ -73,6 +73,9 @@ struct Config {
     unsigned int seed = 0;
     bool seed_provided = false;
 
+    int min_cores = 1;
+    int num_chains_per_core = 4;
+
     // Debug & Chunk & Core Test
     bool test_all_cores = false;
     bool verbose_output = false;

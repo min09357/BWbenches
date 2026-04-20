@@ -1,5 +1,6 @@
 #include "bandwidth.h"
 #include "stream.h"
+#include "utils.h"
 
 #include <cfloat>
 
@@ -8,35 +9,7 @@
 BenchResult measureBandwidth_old(const vector<void*>& stream) {
     if (stream.empty()) return {0, 0, 0, 0, 0};
 
-    int max_hardware_threads = omp_get_max_threads();
-    vector<int> thread_counts;
-
-    if (g_config.test_all_cores) {
-        int core_stride = 1;
-        int last_val = 1;
-        // for (int t = 1; t < core_stride && t <= max_hardware_threads; t *= 2) {
-        //     thread_counts.push_back(t);
-        //     last_val = t;
-        // }
-
-        // int start_val = core_stride;
-        int start_val = 4;
-        if (max_hardware_threads >= start_val) {
-            for (int t = start_val; t <= max_hardware_threads; t += core_stride) {
-            // for (int t = start_val; t <= 12; t += core_stride) {
-                thread_counts.push_back(t);
-                last_val = t;
-            }
-        }
-
-        // if (last_val != max_hardware_threads) {
-        //     thread_counts.push_back(max_hardware_threads);
-        // }
-
-    } else {
-        thread_counts.push_back(max_hardware_threads);
-         
-    }
+    vector<int> thread_list = get_thread_list();
 
     BenchResult best_res = {0, 0, 0, 0, 0};
     int best_core = 0;
@@ -46,7 +19,7 @@ BenchResult measureBandwidth_old(const vector<void*>& stream) {
         cout << "#cores\tAvgGBs\tUsage%\tAvgLat\tDeviate\tMaxGBs\tMinGBs\tMax%" << endl;
     }
 
-    for (int t : thread_counts) {
+    for (int t : thread_list) {
         // Set thread count for this iteration
         omp_set_num_threads(t);
 
@@ -184,35 +157,8 @@ BenchResult measureBandwidth_old(const vector<void*>& stream) {
 
 BenchResult measureBandwidth_withPattern(const vector<uint64_t>& stream, const vector<uint64_t>& pattern) {
     if (stream.empty()) return {0, 0, 0, 0, 0};
-    int max_hardware_threads = omp_get_max_threads();
-    vector<int> thread_counts;
-
-    if (g_config.test_all_cores) {
-        int core_stride = 1;
-        int last_val = 1;
-        // for (int t = 1; t < core_stride && t <= max_hardware_threads; t *= 2) {
-        //     thread_counts.push_back(t);
-        //     last_val = t;
-        // }
-
-        // int start_val = core_stride;
-        int start_val = 3;
-        if (max_hardware_threads >= start_val) {
-            for (int t = start_val; t <= max_hardware_threads; t += core_stride) {
-            // for (int t = start_val; t <= 12; t += core_stride) {
-                thread_counts.push_back(t);
-                last_val = t;
-            }
-        }
-
-        // if (last_val != max_hardware_threads) {
-        //     thread_counts.push_back(max_hardware_threads);
-        // }
-
-    } else {
-        thread_counts.push_back(max_hardware_threads);
-         
-    }
+    
+    vector<int> thread_list = get_thread_list();
 
     BenchResult best_res = {0, 0, 0, 0, 0};
     int best_core = 0;
@@ -228,7 +174,7 @@ BenchResult measureBandwidth_withPattern(const vector<uint64_t>& stream, const v
         cout << "#cores\tAvgGBs\tUsage%\tAvgLat\tDeviate\tMaxGBs\tMinGBs\tMax%" << endl;
     }
 
-    for (int t : thread_counts) {
+    for (int t : thread_list) {
         // Set thread count for this iteration
         omp_set_num_threads(t);
 
@@ -414,37 +360,7 @@ BenchResult measureBandwidth_withPattern_perCores(int nch, int nslot, int nsc, i
         col_stride = 1; //change
     }
 
-
-
-
-    int max_hardware_threads = omp_get_max_threads();
-    vector<int> thread_counts;
-
-    if (g_config.test_all_cores) {
-        int core_stride = 1;
-        int last_val = 1;
-        // for (int t = 1; t < core_stride && t <= max_hardware_threads; t *= 2) {
-        //     thread_counts.push_back(t);
-        //     last_val = t;
-        // }
-
-        // int start_val = core_stride;
-        int start_val = 3;
-        if (max_hardware_threads >= start_val) {
-            for (int t = start_val; t <= max_hardware_threads; t += core_stride) {
-            // for (int t = start_val; t <= 12; t += core_stride) {
-                thread_counts.push_back(t);
-                last_val = t;
-            }
-        }
-
-        // if (last_val != max_hardware_threads) {
-        //     thread_counts.push_back(max_hardware_threads);
-        // }
-
-    } else {
-        thread_counts.push_back(max_hardware_threads);
-    }
+    vector<int> thread_list = get_thread_list();
 
     BenchResult best_res = {0, 0, 0, 0, 0};
     int best_core = 0;
@@ -459,7 +375,7 @@ BenchResult measureBandwidth_withPattern_perCores(int nch, int nslot, int nsc, i
         cout << "#cores\tAvgGBs\tUsage%\tAvgLat\tDeviate\tMaxGBs\tMinGBs\tMax%" << endl;
     }
 
-    for (int t : thread_counts) {
+    for (int t : thread_list) {
         // Set thread count for this iteration
         omp_set_num_threads(t);
 
@@ -631,34 +547,8 @@ BenchResult measureBandwidth_withPattern_perCores(int nch, int nslot, int nsc, i
 
 BenchResult measureBandwidth_PointerChasing(const vector<void*>& stream, int num_chains_per_cores, int chain_stride) {
     if (stream.empty()) return {0, 0, 0, 0, 0};
-    int max_hardware_threads = omp_get_max_threads();
-    vector<int> thread_counts;
 
-    if (g_config.test_all_cores) {
-        int core_stride = 1;
-        int last_val = 1;
-        // for (int t = 1; t < core_stride && t <= max_hardware_threads; t *= 2) {
-        //     thread_counts.push_back(t);
-        //     last_val = t;
-        // }
-
-        // int start_val = core_stride;
-        int start_val = 3;
-        if (max_hardware_threads >= start_val) {
-            for (int t = start_val; t <= max_hardware_threads; t += core_stride) {
-            // for (int t = start_val; t <= 12; t += core_stride) {
-                thread_counts.push_back(t);
-                last_val = t;
-            }
-        }
-
-        // if (last_val != max_hardware_threads) {
-        //     thread_counts.push_back(max_hardware_threads);
-        // }
-
-    } else {
-        thread_counts.push_back(max_hardware_threads);
-    }
+    vector<int> thread_list = get_thread_list();
 
     BenchResult best_res = {0, 0, 0, 0, 0};
     int best_core = 0;
@@ -671,7 +561,7 @@ BenchResult measureBandwidth_PointerChasing(const vector<void*>& stream, int num
         cout << "#cores\tAvgGBs\tUsage%\tAvgLat\tDeviate\tMaxGBs\tMinGBs\tMax%" << endl;
     }
 
-    for (int t : thread_counts) {
+    for (int t : thread_list) {
         // Set thread count for this iteration
         omp_set_num_threads(t);
 
@@ -752,7 +642,7 @@ BenchResult measureBandwidth_PointerChasing(const vector<void*>& stream, int num
 
                 vector<void*> current_addr = starting_node[tid];
 
-
+                _mm_lfence();
                 start_cycles[tid] = __rdtsc();
 
                 for (int step = 0; step < chain_size; step++) {
@@ -769,6 +659,7 @@ BenchResult measureBandwidth_PointerChasing(const vector<void*>& stream, int num
                 _mm_lfence();
                 uintptr_t sink = 0;
                 for (int c = 0; c < num_chains_per_cores; c++) {
+                    sink ^= (uintptr_t)current_addr[c];
                     if (current_addr[c] != starting_node[tid][c]) {
                         cerr << "[WARN] Thread " << tid << " chain " << c << " did not return to starting node!" << endl;
                     }

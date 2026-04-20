@@ -14,11 +14,22 @@ dram_bw    = "38.4" # GB/s
 # Check numactl -H
 # node 0 cpus: 0 1 2 3 ... => numa_stride = 1
 # node 0 cpus: 0 2 4 6 ... => numa_stride = 2
-numa_stride = 2
+numa_stride = 1
+
+
 
 # If True, it will run the benchmark multiple times, increasing the number of cores used each time (starting from n core up to NUM_CORES). 
 # False, it will run the benchmark only once with the specified number of cores.
 sweep_cores = True 
+
+# Minimum number of cores to start with when sweep_cores is True. 
+min_cores = 3   
+
+
+# Number of pointer chasing chains per core for pointer chasing benchmarks to saturate DRAM bandwidth. 
+num_chains_per_core = 4  
+
+
 
 verbose_output = True 
 
@@ -128,6 +139,8 @@ def main():
         "--DRAM_bandwidth",   dram_bw,
         "--NUMA_node",        str(node_id),
         "--NUMA_stride",      str(numa_stride),
+        "--num_chains_per_core", str(num_chains_per_core),
+        "--min_cores",        str(min_cores),
         *extra_args,
     ]
 

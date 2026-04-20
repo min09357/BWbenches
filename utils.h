@@ -49,3 +49,6 @@ int calcNum(const vector<uint64_t>& masks);
 int countSetBits(uint64_t n);
 int getMaxBit();
 int getMaxOnlyFuncBit();
+
+
+vector<int> get_thread_list();
