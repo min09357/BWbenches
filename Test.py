@@ -46,6 +46,7 @@ def main():
     
     if node_id == 0:
         # Total number of 1G Hugepages in node
+        # Note: This is not the number of pages to use, but the total number of pages available in node. Check grub file.
         pool_size = 20  
 
         # 0x0 if only one CH/DIMM/SCH/RANK

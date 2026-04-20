@@ -67,13 +67,7 @@ int main(int argc, char* argv[])
 
     // Parse benchmark list (comma separated)
     vector<string> target_benchmarks = parseBenchList(g_config.bench);
-    static const set<string> IMPLEMENTED_BENCHMARKS = {
-        "BW_ALL_RD","BW_ALL", "BW_ALL_OLD", "BW_ALL_RM", "BW_ALL_RM_OLD", "BW_ALL_WO_RK", "BW_ALL_WO_RK_RM",
-        "BW_SB", "BW_SB_RM", "BW_DG", "BW_DG_4", "BW_DOUBLE_BANK", "BW_HALF_BANK", "BW_HALF_BANK_WO_RK", "BW_HALF_BANK_RM",
-        "BW_SINGLE_BA", "BW_SINGLE_BA_RM", "BW_SINGLE_BA_WO_RK_RM", "BW_SINGLE_BA_OLD", "BW_SINGLE_BA_RM_OLD", "BW_SINGLE_BA_RD",
-        "BW_DOUBLE_BA", "BW_DOUBLE_BA_RM", "BW_DOUBLE_BA_WO_RK_RM", "BW_DOUBLE_BA_OLD", "BW_DOUBLE_BA_RM_OLD", "BW_DOUBLE_BA_RD",
-        "TEST", "TEST1", "TEST2", "TEST3", "TEST4", "TEST5", "TEST6"
-    };
+
     for (const string& b : target_benchmarks) {
         if (IMPLEMENTED_BENCHMARKS.find(b) == IMPLEMENTED_BENCHMARKS.end()) {
             cerr << "[ERROR] Unknown benchmark type: " << b << endl;
@@ -246,7 +240,6 @@ int main(int argc, char* argv[])
 
 
 
-    // Print Settings
     cout << "Benchmarks to run: ";
     for(const auto& b : target_benchmarks) cout << b << " ";
     cout << endl;
@@ -255,7 +248,6 @@ int main(int argc, char* argv[])
     cout << "  Col Mask: 0x" << g_config.col_mask << endl;
     cout << dec;
 
-    // [Init] 전역 변수 초기화
     g_config.num_ch   = calcNum(g_config.ch_masks);
     g_config.num_slot = calcNum(g_config.slot_masks);
     g_config.num_sc   = calcNum(g_config.sub_ch_masks);
@@ -281,1133 +273,208 @@ int main(int argc, char* argv[])
         cout << ">>> Running Benchmark [" << (b_idx+1) << "/" << target_benchmarks.size() << "]: " << current_bench << endl;
         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << endl;
 
-        if (current_bench == "BW_ALL_RD") {
-            cout << "=== Running BW_ALL_RD ===" << endl;
-
+        if (current_bench == "BW_ALL_HIT_BASE_SINGLE") {
             vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank);
-
-            shuffle(stream.begin(), stream.end(), g_gen);
-
-            cout << "\n========================================================" << endl;
-            cout << "                BW_ALL_RD Benchmark Results                " << endl;
-            cout << "========================================================" << endl;
-
             BenchResult res = measureBandwidth_old(stream);
-
-            cout << fixed << setprecision(3);
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
-            cout << " - Time         : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
-            cout << " - Elements     : " << res.valid_count << endl;
-            cout << "========================================================" << endl;
+            print_result(res);
         }
 
-        else if (current_bench == "BW_ALL_OLD") {
-            cout << "=== Running BW_ALL_OLD ===" << endl;
-
-            vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank);
-
-            cout << "\n========================================================" << endl;
-            cout << "                BW_ALL_OLD Benchmark Results                " << endl;
-            cout << "========================================================" << endl;
-
-            BenchResult res = measureBandwidth_old(stream);
-
-            cout << fixed << setprecision(3);
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
-            cout << " - Time         : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
-            cout << " - Elements     : " << res.valid_count << endl;
-            cout << "========================================================" << endl;
+        else if (current_bench == "BW_ALL_HIT_BASE_PERCORE") {
+            // todo
+            cout << "Todo" << endl;
         }
 
-        else if (current_bench == "BW_ALL") {
-            cout << "=== Running BW_ALL ===" << endl;
-
+        else if (current_bench == "BW_ALL_HIT_PT_SINGLE") {
             pair<vector<uint64_t>,vector<int>> pattern_pair = getPatternsRowHit(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank);
             vector<uint64_t> patterns = pattern_pair.first;
             int row_stride = pattern_pair.second[0];
             int col_stride = pattern_pair.second[1];
             vector<uint64_t> stream = createBaseAddrsRowHit(row_stride,col_stride);
-
-            cout << "\n========================================================" << endl;
-            cout << "                BW_ALL Benchmark Results                " << endl;
-            cout << "========================================================" << endl;
-
             BenchResult res = measureBandwidth_withPattern(stream, patterns);
-
-            cout << fixed << setprecision(3);
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
-            cout << " - Time         : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
-            cout << " - Elements     : " << res.valid_count << endl;
-
-
-            cout << "========================================================" << endl;
+            print_result(res);
         }
 
+        else if (current_bench == "BW_ALL_HIT_PT_PERCORE") {
+            bool is_hit = true;
+            BenchResult res = measureBandwidth_withPattern_perCores(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank, is_hit);
+            print_result(res);
+        }
 
+        else if (current_bench == "BW_ALL_HIT_PC_SINGLE") {
+            vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank);
+            int col_stride = 1;
+            int num_chains_per_cores = 32;
+            int chain_stride = 1;
+            BenchResult res = measureBandwidth_PointerChasing(stream, num_chains_per_cores, chain_stride);
+            print_result(res);
+        }
 
-        else if (current_bench == "BW_ALL_RM") {
-            cout << "=== Running BW_ALL_RM ===" << endl;
+        else if (current_bench == "BW_ALL_HIT_PC_PERCORE") {
+            // todo
+            cout << "Todo" << endl;
+        }
+        
+        else if (current_bench == "BW_ALL_MISS_BASE_SINGLE") {
+            int col_stride = 1;
+            vector<void*> stream = createStreamRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank,col_stride);
+            BenchResult res = measureBandwidth_old(stream);
+            print_result(res);
+        }
 
+        else if (current_bench == "BW_ALL_MISS_BASE_PERCORE") {
+            // todo
+            cout << "Todo" << endl;
+        }
+
+        else if (current_bench == "BW_ALL_MISS_PT_SINGLE") {
             int col_stride = 1;
             pair<vector<uint64_t>,int> pattern_pair = getPatternsRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank, col_stride);
             vector<uint64_t> patterns = pattern_pair.first;
             int row_stride = pattern_pair.second;
             vector<uint64_t> stream = createBaseAddrsRowMiss(row_stride, col_stride);
-
-            cout << "\n========================================================" << endl;
-            cout << "              BW_ALL_RM Benchmark Results               " << endl;
-            cout << "========================================================" << endl;
-
             BenchResult res = measureBandwidth_withPattern(stream, patterns);
-
-            cout << fixed << setprecision(3);
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
-            cout << " - Time          : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
-            cout << " - Elements      : " << res.valid_count << endl;
-            cout << "========================================================" << endl;
+            print_result(res);
         }
 
-        else if (current_bench == "TEST") {
-            cout << "=== Running TEST ===" << endl; //pattern, per cores, row hit
-
-            
-            cout << "\n========================================================" << endl;
-            cout << "              TEST Benchmark Results               " << endl;
-            cout << "========================================================" << endl;
-
-            bool is_hit = true;
-            BenchResult res = measureBandwidth_withPattern_perCores(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank, is_hit);
-
-            cout << fixed << setprecision(3);
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
-            cout << " - Time          : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
-            cout << " - Elements      : " << res.valid_count << endl;
-            cout << "========================================================" << endl;
-        }
-
-        else if (current_bench == "TEST1") {
-            cout << "=== Running TEST1 ===" << endl; //pattern, per cores, row miss
-
-            
-            cout << "\n========================================================" << endl;
-            cout << "              TEST1 Benchmark Results               " << endl;
-            cout << "========================================================" << endl;
-
+        else if (current_bench == "BW_ALL_MISS_PT_PERCORE") {
             bool is_hit = false;
             BenchResult res = measureBandwidth_withPattern_perCores(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank, is_hit);
-
-            cout << fixed << setprecision(3);
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
-            cout << " - Time          : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
-            cout << " - Elements      : " << res.valid_count << endl;
-            cout << "========================================================" << endl;
+            print_result(res);
         }
 
-        else if (current_bench == "TEST2") {
-            cout << "=== Running TEST2 ===" << endl;    //pointer chasing, single trace, row hit
+        else if (current_bench == "BW_ALL_MISS_PC_SINGLE") {
+            int col_stride = 1;
+            vector<void*> stream = createStreamRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank,col_stride);
+            int num_chains_per_cores = 32;
+            int chain_stride = 1;
+            BenchResult res = measureBandwidth_PointerChasing(stream, num_chains_per_cores, chain_stride);
+            print_result(res);
+        }
 
+        else if (current_bench == "BW_ALL_MISS_PC_PERCORE") {
+            // todo
+            cout << "Todo" << endl;
+        }
+
+        else if (current_bench == "BW_ALL_RAND_BASE_SINGLE" || current_bench == "BW_ALL_RAND_BASE_PERCORE") {
             vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank);
-            // vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, 1, g_config.num_bg, g_config.num_bank);
-            int col_stride = 1;
-            // vector<void*> stream = createStreamRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank,col_stride);
-            // vector<void*> stream = createStreamRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,g_config.num_bank,col_stride);
-
-
-            // shuffle(stream.begin(), stream.end(), g_gen);
-
-            int num_chains_per_cores = 32;
-            int chain_stride = 1;
-
-            cout << "\n========================================================" << endl;
-            cout << "              TEST2 Benchmark Results               " << endl;
-            cout << "========================================================" << endl;
-
-            BenchResult res = measureBandwidth_PointerChasing(stream, num_chains_per_cores, chain_stride);
-
-            cout << fixed << setprecision(3);
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
-            cout << " - Time          : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
-            cout << " - Elements      : " << res.valid_count << endl;
-            cout << "========================================================" << endl;
-        }
-
-        else if (current_bench == "TEST3") {
-            cout << "=== Running TEST3 ===" << endl; //pointer chasing, single trace, row miss
-
-            // vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank);
-            // vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, 1, g_config.num_bg, g_config.num_bank);
-            int col_stride = 1;
-            vector<void*> stream = createStreamRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank,col_stride);
-            // vector<void*> stream = createStreamRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,g_config.num_bank,col_stride);
-
-
-            // shuffle(stream.begin(), stream.end(), g_gen);
-
-            int num_chains_per_cores = 32;
-            int chain_stride = 1;
-
-            cout << "\n========================================================" << endl;
-            cout << "              TEST3 Benchmark Results               " << endl;
-            cout << "========================================================" << endl;
-
-            BenchResult res = measureBandwidth_PointerChasing(stream, num_chains_per_cores, chain_stride);
-
-            cout << fixed << setprecision(3);
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
-            cout << " - Time          : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
-            cout << " - Elements      : " << res.valid_count << endl;
-            cout << "========================================================" << endl;
-        }
-
-
-        else if (current_bench == "TEST4") {
-            cout << "=== Running TEST4 ===" << endl;
-
-            // vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank);
-            // vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, 1, g_config.num_bg, g_config.num_bank);
-            int col_stride = 1;
-            vector<void*> stream = createStreamRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank,col_stride);
-            // vector<void*> stream = createStreamRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,g_config.num_bank,col_stride);
-
-
-            // shuffle(stream.begin(), stream.end(), g_gen);
-
-            int num_chains_per_threads = 64;
-            int chain_stride = 1;
-
-            cout << "\n========================================================" << endl;
-            cout << "              TEST4 Benchmark Results               " << endl;
-            cout << "========================================================" << endl;
-
-            BenchResult res = measureBandwidth_PointerChasing(stream, num_chains_per_threads, chain_stride);
-
-            cout << fixed << setprecision(3);
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
-            cout << " - Time          : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
-            cout << " - Elements      : " << res.valid_count << endl;
-            cout << "========================================================" << endl;
-        }
-
-
-        else if (current_bench == "TEST5") {
-            cout << "=== Running TEST5 ===" << endl; //pattern, per cores, row miss, 1rank
-
-            
-            cout << "\n========================================================" << endl;
-            cout << "              TEST5 Benchmark Results               " << endl;
-            cout << "========================================================" << endl;
-
-            bool is_hit = false;
-            BenchResult res = measureBandwidth_withPattern_perCores(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,g_config.num_bank, is_hit);
-
-            cout << fixed << setprecision(3);
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
-            cout << " - Time          : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
-            cout << " - Elements      : " << res.valid_count << endl;
-            cout << "========================================================" << endl;
-        }
-
-
-        else if (current_bench == "TEST6") {
-            cout << "=== Running TEST6 ===" << endl; //pointer chasing, single trace, row miss
-
-            // vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank);
-            // vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, 1, g_config.num_bg, g_config.num_bank);
-            int col_stride = 1;
-            vector<void*> stream = createStreamRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,g_config.num_bank,col_stride);
-            // vector<void*> stream = createStreamRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,g_config.num_bank,col_stride);
-
-
-            // shuffle(stream.begin(), stream.end(), g_gen);
-
-            int num_chains_per_cores = 32;
-            int chain_stride = 1;
-
-            cout << "\n========================================================" << endl;
-            cout << "              TEST6 Benchmark Results               " << endl;
-            cout << "========================================================" << endl;
-
-            BenchResult res = measureBandwidth_PointerChasing(stream, num_chains_per_cores, chain_stride);
-
-            cout << fixed << setprecision(3);
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
-            cout << " - Time          : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
-            cout << " - Elements      : " << res.valid_count << endl;
-            cout << "========================================================" << endl;
-        }
-
-        else if (current_bench == "BW_ALL_RM_OLD") {
-            cout << "=== Running BW_ALL_RM_OLD ===" << endl;
-
-            int col_stride = 1;
-            vector<void*> stream = createStreamRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank,col_stride);
-
-
-
-            cout << "\n========================================================" << endl;
-            cout << "              BW_ALL_RM_OLD Benchmark Results               " << endl;
-            cout << "========================================================" << endl;
-
+            shuffle(stream.begin(), stream.end(), g_gen);
             BenchResult res = measureBandwidth_old(stream);
-
-            cout << fixed << setprecision(3);
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
-            cout << " - Time          : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
-            cout << " - Elements      : " << res.valid_count << endl;
-            cout << "========================================================" << endl;
+            print_result(res);
         }
 
-        else if (current_bench == "BW_ALL_WO_RK") {
-            cout << "=== Running BW_ALL_WO_RK (Single Rank Throughput) ===" << endl;
+        else if (current_bench == "BW_ALL_RAND_PT_SINGLE" || current_bench == "BW_ALL_RAND_PT_PERCORE") {
+            cout << "Pattern-based can't be used with random access patterns" << endl;
+        }
 
+        else if (current_bench == "BW_ALL_RAND_PC_SINGLE" || current_bench == "BW_ALL_RAND_PC_PERCORE") {
+            // todo
+            cout << "Todo" << endl;
+        }
+
+
+        /////////////////////////////////////////////////////////////////////////
+
+        else if (current_bench == "BW_1R_HIT_BASE_SINGLE") {
+            vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, 1, g_config.num_bg, g_config.num_bank);
+            BenchResult res = measureBandwidth_old(stream);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_1R_HIT_BASE_PERCORE") {
+            // todo
+            cout << "Todo" << endl;
+        }
+
+        else if (current_bench == "BW_1R_HIT_PT_SINGLE") {
             pair<vector<uint64_t>,vector<int>> pattern_pair = getPatternsRowHit(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,g_config.num_bank);
             vector<uint64_t> patterns = pattern_pair.first;
             int row_stride = pattern_pair.second[0];
             int col_stride = pattern_pair.second[1];
             vector<uint64_t> stream = createBaseAddrsRowHit(row_stride,col_stride);
-            cout << "\n========================================================" << endl;
-            cout << "           BW_ALL_WO_RK Benchmark Results             " << endl;
-            cout << "========================================================" << endl;
-
             BenchResult res = measureBandwidth_withPattern(stream, patterns);
-
-            cout << fixed << setprecision(3);
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
-            cout << " - Time         : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
-            cout << " - Elements     : " << res.valid_count << endl;
-            cout << "========================================================" << endl;
+            print_result(res);
         }
 
+        else if (current_bench == "BW_1R_HIT_PT_PERCORE") {
+            bool is_hit = true;
+            BenchResult res = measureBandwidth_withPattern_perCores(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,g_config.num_bank, is_hit);
+            print_result(res);
+        }
 
+        else if (current_bench == "BW_1R_HIT_PC_SINGLE") {
+            vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, 1, g_config.num_bg, g_config.num_bank);
+            int col_stride = 1;
+            int num_chains_per_cores = 32;
+            int chain_stride = 1;
+            BenchResult res = measureBandwidth_PointerChasing(stream, num_chains_per_cores, chain_stride);
+            print_result(res);
+        }
 
-        else if (current_bench == "BW_ALL_WO_RK_RM") {
-            cout << "=== Running BW_ALL_WO_RK_RM (Single Rank Throughput) ===" << endl;
+        else if (current_bench == "BW_1R_HIT_PC_PERCORE") {
+            // todo
+            cout << "Todo" << endl;
+        }
 
-            pair<vector<uint64_t>,int> pattern_pair = getPatternsRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,g_config.num_bank);
+        else if (current_bench == "BW_1R_MISS_BASE_SINGLE") {
+            int col_stride = 1;
+            vector<void*> stream = createStreamRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,g_config.num_bank,col_stride);
+            BenchResult res = measureBandwidth_old(stream);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_1R_MISS_BASE_PERCORE") {
+            // todo
+            cout << "Todo" << endl;
+        }
+
+        else if (current_bench == "BW_1R_MISS_PT_SINGLE") {
+            int col_stride = 1;
+            pair<vector<uint64_t>,int> pattern_pair = getPatternsRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,g_config.num_bank, col_stride);
             vector<uint64_t> patterns = pattern_pair.first;
             int row_stride = pattern_pair.second;
-            vector<uint64_t> stream = createBaseAddrsRowMiss(row_stride);
-
-            cout << "\n========================================================" << endl;
-            cout << "           BW_ALL_WO_RK_RM Benchmark Results             " << endl;
-            cout << "========================================================" << endl;
-
+            vector<uint64_t> stream = createBaseAddrsRowMiss(row_stride, col_stride);
             BenchResult res = measureBandwidth_withPattern(stream, patterns);
-
-            cout << fixed << setprecision(3);
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
-            cout << " - Time         : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
-            cout << " - Elements     : " << res.valid_count << endl;
-            cout << "========================================================" << endl;
+            print_result(res);
         }
 
-        else if (current_bench == "BW_SB") {
-            cout << "=== Running BW_SB (Single Bank Throughput) ===" << endl;
-
-            pair<vector<uint64_t>,vector<int>> pattern_pair = getPatternsRowHit(1,1,1,1,1,1);
-            vector<uint64_t> patterns = pattern_pair.first;
-            int row_stride = pattern_pair.second[0];
-            int col_stride = pattern_pair.second[1];
-            vector<uint64_t> stream = createBaseAddrsRowHit(row_stride,col_stride);
-
-            cout << "\n========================================================" << endl;
-            cout << "                  BW_SB Benchmark Results                  " << endl;
-            cout << "========================================================" << endl;
-
-            BenchResult res = measureBandwidth_withPattern(stream,patterns);
-
-            cout << fixed << setprecision(3);
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
-            cout << " - Time         : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
-            cout << "========================================================" << endl;
-
+        else if (current_bench == "BW_1R_MISS_PT_PERCORE") {
+            bool is_hit = false;
+            BenchResult res = measureBandwidth_withPattern_perCores(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,g_config.num_bank, is_hit);
+            print_result(res);
         }
 
-        else if (current_bench == "BW_SB_RM") {
-            cout << "=== Running BW_SB (Single Bank Throughput) ===" << endl;
-
-            pair<vector<uint64_t>,int> pattern_pair = getPatternsRowMiss(1,1,1,1,1,1);
-            vector<uint64_t> patterns = pattern_pair.first;
-            int row_stride = pattern_pair.second;
-            vector<uint64_t> stream = createBaseAddrsRowMiss(row_stride);
-
-            cout << "\n========================================================" << endl;
-            cout << "                  BW_SB_RM Benchmark Results                  " << endl;
-            cout << "========================================================" << endl;
-
-            BenchResult res = measureBandwidth_withPattern(stream,patterns);
-
-            cout << fixed << setprecision(3);
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
-            cout << " - Time         : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
-            cout << "========================================================" << endl;
-
+        else if (current_bench == "BW_1R_MISS_PC_SINGLE") {
+            int col_stride = 1;
+            vector<void*> stream = createStreamRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,g_config.num_bank,col_stride);
+            int num_chains_per_cores = 32;
+            int chain_stride = 1;
+            BenchResult res = measureBandwidth_PointerChasing(stream, num_chains_per_cores, chain_stride);
+            print_result(res);
         }
 
-        else if (current_bench == "BW_DG") {
-            cout << "=== Running BW_DG (Interleaving Bandwidth Test) ===" << endl;
-
-            cout << "\n========================================================" << endl;
-            cout << "                BW_DG Benchmark Results                  " << endl;
-            cout << "========================================================" << endl;
-
-            cout << "\n--------------------------------------------------------" << endl;
-            cout << "\tDifferent Group Test" << endl;
-
-            pair<vector<uint64_t>,vector<int>> DG_pattern_pair = getPatternsRowHit(1,1,1,1,2,1);
-            vector<uint64_t> DG_patterns = DG_pattern_pair.first;
-            int DG_row_stride = DG_pattern_pair.second[0];
-            int DG_col_stride = DG_pattern_pair.second[1];
-            vector<uint64_t> DG_stream = createBaseAddrsRowHit(DG_row_stride,DG_col_stride);
-
-            BenchResult DG_res = measureBandwidth_withPattern(DG_stream,DG_patterns);
-            cout << " - Throughput : " << DG_res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << DG_res.usage << " %" << endl;
-
-            cout << "--------------------------------------------------------" << endl;
-            cout << "\tSame Group Test" << endl;
-            pair<vector<uint64_t>,vector<int>> SG_pattern_pair = getPatternsRowHit(1,1,1,1,1,2);
-            vector<uint64_t> SG_patterns = SG_pattern_pair.first;
-            int SG_row_stride = SG_pattern_pair.second[0];
-            int SG_col_stride = SG_pattern_pair.second[1];
-            vector<uint64_t> SG_stream = createBaseAddrsRowHit(SG_row_stride,SG_col_stride);
-
-            BenchResult SG_res = measureBandwidth_withPattern(SG_stream,SG_patterns);
-            cout << " - Throughput : " << SG_res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << SG_res.usage << " %" << endl;
-
-            cout << "--------------------------------------------------------" << endl;
-
-            double ratio = (SG_res.bw_gbs > 0) ? (DG_res.bw_gbs / SG_res.bw_gbs) : 0.0;
-            cout << "   - Ratio (Diff / Same): " << ratio << "x" << endl;
-            cout << "========================================================" << endl;
+        else if (current_bench == "BW_1R_ALL_MISS_PC_PERCORE") {
+            // todo
+            cout << "Todo" << endl;
         }
 
-        else if (current_bench == "BW_DG_4") {
-            cout << "=== Running BW_DG_4 (4-Bank Interleaving Test) ===" << endl;
-
-            cout << "\n========================================================" << endl;
-            cout << "                BW_DG_4 Benchmark Results                  " << endl;
-            cout << "========================================================" << endl;
-
-            cout << "\n--------------------------------------------------------" << endl;
-            cout << "\tDifferent Group Test" << endl;
-
-            pair<vector<uint64_t>,vector<int>> DG_pattern_pair = getPatternsRowHit(1,1,1,1,4,1);
-            vector<uint64_t> DG_patterns = DG_pattern_pair.first;
-            int DG_row_stride = DG_pattern_pair.second[0];
-            int DG_col_stride = DG_pattern_pair.second[1];
-            vector<uint64_t> DG_stream = createBaseAddrsRowHit(DG_row_stride,DG_col_stride);
-
-            BenchResult DG_res = measureBandwidth_withPattern(DG_stream,DG_patterns);
-            cout << " - Throughput : " << DG_res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << DG_res.usage << " %" << endl;
-
-            cout << "--------------------------------------------------------" << endl;
-            cout << "\tSame Group Test" << endl;
-            pair<vector<uint64_t>,vector<int>> SG_pattern_pair = getPatternsRowHit(1,1,1,1,1,4);
-            vector<uint64_t> SG_patterns = SG_pattern_pair.first;
-            int SG_row_stride = SG_pattern_pair.second[0];
-            int SG_col_stride = SG_pattern_pair.second[1];
-            vector<uint64_t> SG_stream = createBaseAddrsRowHit(SG_row_stride,SG_col_stride);
-
-            BenchResult SG_res = measureBandwidth_withPattern(SG_stream,SG_patterns);
-            cout << " - Throughput : " << SG_res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << SG_res.usage << " %" << endl;
-
-            cout << "--------------------------------------------------------" << endl;
-
-            double ratio = (SG_res.bw_gbs > 0) ? (DG_res.bw_gbs / SG_res.bw_gbs) : 0.0;
-            cout << "   - Ratio (Diff / Same): " << ratio << "x" << endl;
-            cout << "========================================================" << endl;
-        }
-
-
-        else if (current_bench == "BW_DOUBLE_BANK") {
-            cout << "=== Running BW_DOUBLE_BANK (Mask Verification) ===" << endl;
-            cout << "Reference Bank: CH:0 SLOT:0 SC:0 RK:0 BG:0 B:0" << endl;
-            cout << "Fix masks bit to 0 except for target mask." << endl;
-
-            const vector<vector<uint64_t>> masks = {
-                g_config.ch_masks, g_config.slot_masks, g_config.sub_ch_masks,
-                g_config.rank_masks, g_config.bg_masks, g_config.bank_masks
-            };
-            const int counts[] = {g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank};
-            const vector<string> types = {"CH", "SLOT", "SC", "RK", "BG", "BA"};
-
-            cout << "========================================================" << endl;
-            cout << "\tBW_DOUBLE_BANK Benchmark Results" << endl;
-            cout << "========================================================" << endl;
-
-            // 0:CH, 1:SLOT, 2:SC, 3:RK, 4:BG, 5:BANK
-            for (int i = 0; i < 6; i++) {
-                if (counts[i] <= 1) continue;
-                cout << "--------------------------------------------------------" << endl;
-                cout << "\t" << types[i] << " test" << endl;
-                cout << "----------------------------" << endl;
-
-                vector<vector<int>> targets(6);
-
-                for (int j = 0; j < 6; j++) {
-                    if (i != j) {
-                        targets[j].resize(1,0);
-                    }
-                    else {
-                        targets[j].resize(2,0);
-                    }
-                }
-
-                for (int j = 0; (1U << j) < counts[i]; j++) {
-                    targets[i][1] = (1U << j);
-                    cout << "target mask: 0x" << hex << masks[i][j] << dec << endl;
-                    for (int k = 0; k < 6; k++) {
-                        if (k != i) {
-                            cout << types[k] << ": 0 ";
-                        }
-                        else {
-                            cout << types[k] << ": " << (1U << j) << " ";
-                        }
-                    }
-                    cout << endl;
-
-                    pair<vector<uint64_t>,vector<int>> pattern_pair = getPatternsRowHitUseVectors(targets);
-                    vector<uint64_t> patterns = pattern_pair.first;
-                    int row_stride = pattern_pair.second[0];
-                    int col_stride = pattern_pair.second[1];
-                    vector<uint64_t> stream = createBaseAddrsRowHit(row_stride,col_stride);
-
-                    BenchResult res = measureBandwidth_withPattern(stream,patterns);
-                    cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-                    cout << " - Usage : " << res.usage << " %" << endl;
-                    cout << "----------------------------" << endl;
-                }
-                cout << "--------------------------------------------------------" << endl;
-            }
-            cout << "========================================================" << endl;
-        }
-
-        else if (current_bench == "BW_HALF_BANK") {
-            cout << "=== Running BW_HALF_BANK (Mask Verification) ===" << endl;
-            cout << "Reference Bank: CH:0 SLOT:0 SC:0 RK:0 BG:0 B:0" << endl;
-            cout << "Fix one mask bit to 0" << endl;
-
-            const vector<vector<uint64_t>> masks = {
-                g_config.ch_masks, g_config.slot_masks, g_config.sub_ch_masks,
-                g_config.rank_masks, g_config.bg_masks, g_config.bank_masks
-            };
-            const int counts[] = {g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank};
-            const vector<string> types = {"CH", "SLOT", "SC", "RK", "BG", "BA"};
-
-            cout << "========================================================" << endl;
-            cout << "\tBW_HALF_BANK Benchmark Results" << endl;
-            cout << "========================================================" << endl;
-
-            // 0:CH, 1:SLOT, 2:SC, 3:RK, 4:BG, 5:BANK
-            for (int i = 0; i < 6; i++) {
-                if (counts[i] <= 1) continue;
-                cout << "--------------------------------------------------------" << endl;
-                cout << "\t" << types[i] << " test" << endl;
-                cout << "----------------------------" << endl;
-
-                vector<vector<int>> targets(6);
-
-                for (int j = 0; j < 6; j++) {
-                    if (i != j) {
-                        targets[j].resize(counts[j],0);
-                        for (int k = 0; k < counts[j]; k++) {
-                            targets[j][k] = k;
-                        }
-                    }
-                }
-
-                for (int j = 0; (1U << j) < counts[i]; j++) {
-                    targets[i].clear();
-                    for (int k = 0; k < counts[i]; k++) {
-                        if (((1U << j) & k) == 0) targets[i].push_back(k);
-                    }
-                    cout << "target mask: 0x" << hex << masks[i][j] << dec << endl;
-
-                    for (int k = 0; k < 6; k++) {
-                        if (k != i) {
-                            cout << types[k] << ": 0 ";
-                        }
-                        else {
-                            cout << types[k] << ": " << (1U << j) << " ";
-                        }
-                    }
-                    cout << endl;
-
-                    cout << "pushed: ";
-                    for (int k = 0; k < targets[i].size(); k++) {
-                        cout << targets[i][k] << ", ";
-                    }
-                    cout << endl;
-
-                    pair<vector<uint64_t>,vector<int>> pattern_pair = getPatternsRowHitUseVectors(targets);
-                    vector<uint64_t> patterns = pattern_pair.first;
-                    int row_stride = pattern_pair.second[0];
-                    int col_stride = pattern_pair.second[1];
-                    vector<uint64_t> stream = createBaseAddrsRowHit(row_stride,col_stride);
-
-                    BenchResult res = measureBandwidth_withPattern(stream,patterns);
-                    cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-                    cout << " - Usage : " << res.usage << " %" << endl;
-                    cout << "----------------------------" << endl;
-                }
-                cout << "--------------------------------------------------------" << endl;
-            }
-            cout << "========================================================" << endl;
-        }
-
-        else if (current_bench == "BW_HALF_BANK_WO_RK") {
-            cout << "=== Running BW_HALF_BANK_WO_RK (Single Rank + Half Bank Interleaving) ===" << endl;
-
-            const vector<vector<uint64_t>> masks = {
-                g_config.ch_masks, g_config.slot_masks, g_config.sub_ch_masks,
-                g_config.rank_masks, g_config.bg_masks, g_config.bank_masks
-            };
-            const int counts[] = {g_config.num_ch, g_config.num_slot, g_config.num_sc, 1, g_config.num_bg, g_config.num_bank};
-            const vector<string> types = {"CH", "SLOT", "SC", "RK", "BG", "BA"};
-
-            cout << "========================================================" << endl;
-            cout << "\tBW_HALF_BANK_WO_RK Benchmark Results" << endl;
-            cout << "========================================================" << endl;
-
-            // 0:CH, 1:SLOT, 2:SC, 3:RK, 4:BG, 5:BANK
-            for (int i = 0; i < 6; i++) {
-                if (counts[i] <= 1) continue;
-                cout << "--------------------------------------------------------" << endl;
-                cout << "\t" << types[i] << " test" << endl;
-                cout << "----------------------------" << endl;
-
-                vector<vector<int>> targets(6);
-
-                for (int j = 0; j < 6; j++) {
-                    if (i != j) {
-                        targets[j].resize(counts[j],0);
-                        for (int k = 0; k < counts[j]; k++) {
-                            targets[j][k] = k;
-                        }
-                    }
-                }
-
-                for (int j = 0; (1U << j) < counts[i]; j++) {
-                    targets[i].clear();
-                    for (int k = 0; k < counts[i]; k++) {
-                        if (((1U << j) & k) == 0) targets[i].push_back(k);
-                    }
-                    cout << "target mask: 0x" << hex << masks[i][j] << dec << endl;
-
-                    for (int k = 0; k < 6; k++) {
-                        if (k != i) {
-                            cout << types[k] << ": 0 ";
-                        }
-                        else {
-                            cout << types[k] << ": " << (1U << j) << " ";
-                        }
-                    }
-                    cout << endl;
-
-                    cout << "pushed: ";
-                    for (int k = 0; k < targets[i].size(); k++) {
-                        cout << targets[i][k] << ", ";
-                    }
-                    cout << endl;
-
-                    pair<vector<uint64_t>,vector<int>> pattern_pair = getPatternsRowHitUseVectors(targets);
-                    vector<uint64_t> patterns = pattern_pair.first;
-                    int row_stride = pattern_pair.second[0];
-                    int col_stride = pattern_pair.second[1];
-                    vector<uint64_t> stream = createBaseAddrsRowHit(row_stride,col_stride);
-
-                    BenchResult res = measureBandwidth_withPattern(stream,patterns);
-                    cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-                    cout << " - Usage : " << res.usage << " %" << endl;
-                    cout << "----------------------------" << endl;
-                }
-                cout << "--------------------------------------------------------" << endl;
-            }
-            cout << "========================================================" << endl;
-        }
-
-        else if (current_bench == "BW_HALF_BANK_RM") {
-            cout << "=== Running BW_HALF_BANK (Mask Verification) ===" << endl;
-            cout << "Reference Bank: CH:0 SLOT:0 SC:0 RK:0 BG:0 B:0" << endl;
-            cout << "Fix one mask bit to 0" << endl;
-
-            const vector<vector<uint64_t>> masks = {
-                g_config.ch_masks, g_config.slot_masks, g_config.sub_ch_masks,
-                g_config.rank_masks, g_config.bg_masks, g_config.bank_masks
-            };
-            const int counts[] = {g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank};
-            const vector<string> types = {"CH", "SLOT", "SC", "RK", "BG", "BA"};
-
-            cout << "========================================================" << endl;
-            cout << "\tBW_HALF_BANK_RM Benchmark Results" << endl;
-            cout << "========================================================" << endl;
-
-            // 0:CH, 1:SLOT, 2:SC, 3:RK, 4:BG, 5:BANK
-            for (int i = 0; i < 6; i++) {
-                if (counts[i] <= 1) continue;
-                cout << "--------------------------------------------------------" << endl;
-                cout << "\t" << types[i] << " test" << endl;
-                cout << "----------------------------" << endl;
-
-                vector<vector<int>> targets(6);
-
-                for (int j = 0; j < 6; j++) {
-                    if (i != j) {
-                        targets[j].resize(counts[j],0);
-                        for (int k = 0; k < counts[j]; k++) {
-                            targets[j][k] = k;
-                        }
-                    }
-                }
-
-                for (int j = 0; (1U << j) < counts[i]; j++) {
-                    targets[i].clear();
-                    for (int k = 0; k < counts[i]; k++) {
-                        if (((1U << j) & k) == 0) targets[i].push_back(k);
-                    }
-                    cout << "target mask: 0x" << hex << masks[i][j] << dec << endl;
-
-                    for (int k = 0; k < 6; k++) {
-                        if (k != i) {
-                            cout << types[k] << ": 0 ";
-                        }
-                        else {
-                            cout << types[k] << ": " << (1U << j) << " ";
-                        }
-                    }
-                    cout << endl;
-
-                    cout << "pushed: ";
-                    for (int k = 0; k < targets[i].size(); k++) {
-                        cout << targets[i][k] << ", ";
-                    }
-                    cout << endl;
-
-                    pair<vector<uint64_t>,int> pattern_pair = getPatternsRowMissUseVectors(targets);
-                    vector<uint64_t> patterns = pattern_pair.first;
-                    int row_stride = pattern_pair.second;
-                    vector<uint64_t> stream = createBaseAddrsRowMiss(row_stride);
-
-                    BenchResult res = measureBandwidth_withPattern(stream,patterns);
-                    cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-                    cout << " - Usage : " << res.usage << " %" << endl;
-                    cout << "----------------------------" << endl;
-                }
-                cout << "--------------------------------------------------------" << endl;
-            }
-            cout << "========================================================" << endl;
-        }
-
-        else if (current_bench == "BW_SINGLE_BA") {
-            cout << "=== Running BW_SINGLE_BA ===" << endl;
-
-            const int counts[] = {g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank};
-
-            cout << "========================================================" << endl;
-            cout << "\tBW_SINGLE_BA Benchmark Results" << endl;
-            cout << "========================================================" << endl;
-
-
-            pair<vector<uint64_t>,vector<int>> pattern_pair = getPatternsRowHit(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,1);
-            vector<uint64_t> patterns = pattern_pair.first;
-            int row_stride = pattern_pair.second[0];
-            int col_stride = pattern_pair.second[1];
-
-            vector<uint64_t> stream = createBaseAddrsRowHit(row_stride,col_stride);
-
-            BenchResult res = measureBandwidth_withPattern(stream,patterns);
-
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << "----------------------------" << endl;
-
-            cout << "========================================================" << endl;
-        }
-
-        else if (current_bench == "BW_SINGLE_BA_RM") {
-            cout << "=== Running BW_SINGLE_BA_RM ===" << endl;
-
-            cout << "========================================================" << endl;
-            cout << "\tBW_SINGLE_BA_RM Benchmark Results" << endl;
-            cout << "========================================================" << endl;
-
-            pair<vector<uint64_t>,int> pattern_pair = getPatternsRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,1);
-            vector<uint64_t> patterns = pattern_pair.first;
-            int row_stride = pattern_pair.second;
-
-            vector<uint64_t> stream = createBaseAddrsRowMiss(row_stride);
-
-            BenchResult res = measureBandwidth_withPattern(stream,patterns);
-
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << "----------------------------" << endl;
-
-            cout << "========================================================" << endl;
-        }
-
-
-        else if (current_bench == "BW_SINGLE_BA_WO_RK_RM") {
-            cout << "=== Running BW_SINGLE_BA_WO_RK_RM ===" << endl;
-
-            cout << "========================================================" << endl;
-            cout << "\tBW_SINGLE_BA_WO_RK_RM Benchmark Results" << endl;
-            cout << "========================================================" << endl;
-
-            pair<vector<uint64_t>,int> pattern_pair = getPatternsRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,1);
-            vector<uint64_t> patterns = pattern_pair.first;
-            int row_stride = pattern_pair.second;
-
-            vector<uint64_t> stream = createBaseAddrsRowMiss(row_stride);
-
-            BenchResult res = measureBandwidth_withPattern(stream,patterns);
-
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << "----------------------------" << endl;
-
-            cout << "========================================================" << endl;
-        }
-
-        else if (current_bench == "BW_SINGLE_BA_OLD") {
-            cout << "=== Running BW_SINGLE_BA_OLD ===" << endl;
-
-            const int counts[] = {g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank};
-
-            cout << "========================================================" << endl;
-            cout << "\tBW_SINGLE_BA_OLD Benchmark Results" << endl;
-            cout << "========================================================" << endl;
-
-            // for (int i = 0; i < g_config.num_bank; i++) {
-            for (int i = 0; i < 1; i++) {
-                cout << "--------------------------------------------------------" << endl;
-                cout << "\t" << "BA " << i << endl;
-                cout << "----------------------------" << endl;
-
-                vector<vector<int>> targets(6);
-
-                for (int j = 0; j < 5; j++) {
-                    targets[j].resize(counts[j],0);
-                    for (int k = 0; k < counts[j]; k++) {
-                        targets[j][k] = k;
-                    }
-                }
-
-                targets[5].push_back(i);
-
-                vector<void*> stream = createRowHitStreamUseVectors(targets);
-                BenchResult res = measureBandwidth_old(stream);
-
-                cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-                cout << " - Usage : " << res.usage << " %" << endl;
-                cout << "----------------------------" << endl;
-            }
-
-            cout << "========================================================" << endl;
-        }
-
-        else if (current_bench == "BW_SINGLE_BA_RM_OLD") {
-            cout << "=== Running BW_SINGLE_BA_RM_OLD ===" << endl;
-
-            const int counts[] = {g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank};
-
-            cout << "========================================================" << endl;
-            cout << "\tBW_SINGLE_BA_RM_OLD Benchmark Results" << endl;
-            cout << "========================================================" << endl;
-
-            // for (int i = 0; i < g_config.num_bank; i++) {
-            for (int i = 0; i < 1; i++) {
-                cout << "--------------------------------------------------------" << endl;
-                cout << "\t" << "BA " << i << endl;
-                cout << "----------------------------" << endl;
-
-                vector<vector<int>> targets(6);
-
-                for (int j = 0; j < 5; j++) {
-                    targets[j].resize(counts[j],0);
-                    for (int k = 0; k < counts[j]; k++) {
-                        targets[j][k] = k;
-                    }
-                }
-
-                targets[5].push_back(i);
-
-                vector<void*> stream = createRowMissStreamUseVectors(targets);
-                BenchResult res = measureBandwidth_old(stream);
-
-                cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-                cout << " - Usage : " << res.usage << " %" << endl;
-                cout << "----------------------------" << endl;
-            }
-
-            cout << "========================================================" << endl;
-        }
-
-        else if (current_bench == "BW_SINGLE_BA_RD") {
-            cout << "=== Running BW_SINGLE_BA_RD ===" << endl;
-
-            const vector<vector<uint64_t>> masks = {
-                g_config.ch_masks, g_config.slot_masks, g_config.sub_ch_masks,
-                g_config.rank_masks, g_config.bg_masks, g_config.bank_masks
-            };
-            const int counts[] = {g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank};
-
-            cout << "========================================================" << endl;
-            cout << "\tBW_SINGLE_BA_RD Benchmark Results" << endl;
-            cout << "========================================================" << endl;
-
-            // for (int i = 0; i < g_config.num_bank; i++) {
-            for (int i = 0; i < 1; i++) {
-                cout << "--------------------------------------------------------" << endl;
-                cout << "\t" << "BA " << i << endl;
-                cout << "----------------------------" << endl;
-
-                vector<vector<int>> targets(6);
-
-                for (int j = 0; j < 5; j++) {
-                    targets[j].resize(counts[j],0);
-                    for (int k = 0; k < counts[j]; k++) {
-                        targets[j][k] = k;
-                    }
-                }
-
-                targets[5].push_back(i);
-
-                vector<void*> stream = createRowMissStreamUseVectors(targets);
-                shuffle(stream.begin(),stream.end(),g_gen);
-
-                BenchResult res = measureBandwidth_old(stream);
-
-
-                cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-                cout << " - Usage : " << res.usage << " %" << endl;
-                cout << "----------------------------" << endl;
-            }
-
-            cout << "========================================================" << endl;
-        }
-
-
-        else if (current_bench == "BW_DOUBLE_BA") {
-            cout << "=== Running BW_DOUBLE_BA ===" << endl;
-
-            const int counts[] = {g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank};
-
-            cout << "========================================================" << endl;
-            cout << "\tBW_DOUBLE_BA Benchmark Results" << endl;
-            cout << "========================================================" << endl;
-
-
-            pair<vector<uint64_t>,vector<int>> pattern_pair = getPatternsRowHit(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank/2);
-            vector<uint64_t> patterns = pattern_pair.first;
-            int row_stride = pattern_pair.second[0];
-            int col_stride = pattern_pair.second[1];
-
-            vector<uint64_t> stream = createBaseAddrsRowHit(row_stride,col_stride);
-
-            BenchResult res = measureBandwidth_withPattern(stream,patterns);
-
-
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << "----------------------------" << endl;
-
-
-            cout << "========================================================" << endl;
-        }
-
-        else if (current_bench == "BW_DOUBLE_BA_RM") {
-            cout << "=== Running BW_DOUBLE_BA_RM ===" << endl;
-
-
-            cout << "========================================================" << endl;
-            cout << "\tBW_DOUBLE_BA_RM Benchmark Results" << endl;
-            cout << "========================================================" << endl;
-
-            pair<vector<uint64_t>,int> pattern_pair = getPatternsRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank/2);
-            vector<uint64_t> patterns = pattern_pair.first;
-            int row_stride = pattern_pair.second;
-
-            vector<uint64_t> stream = createBaseAddrsRowMiss(row_stride);
-
-            BenchResult res = measureBandwidth_withPattern(stream,patterns);
-
-
-
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << "----------------------------" << endl;
-
-
-            cout << "========================================================" << endl;
-        }
-
-        else if (current_bench == "BW_DOUBLE_BA_WO_RK_RM") {
-            cout << "=== Running BW_DOUBLE_BA_WO_RK_RM ===" << endl;
-
-
-            cout << "========================================================" << endl;
-            cout << "\tBW_DOUBLE_BA_WO_RK_RM Benchmark Results" << endl;
-            cout << "========================================================" << endl;
-
-            pair<vector<uint64_t>,int> pattern_pair = getPatternsRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,g_config.num_bank/2);
-            vector<uint64_t> patterns = pattern_pair.first;
-            int row_stride = pattern_pair.second;
-
-            vector<uint64_t> stream = createBaseAddrsRowMiss(row_stride);
-
-            BenchResult res = measureBandwidth_withPattern(stream,patterns);
-
-
-
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << "----------------------------" << endl;
-
-
-            cout << "========================================================" << endl;
-        }
-
-        else if (current_bench == "BW_DOUBLE_BA_OLD") {
-            cout << "=== Running BW_DOUBLE_BA_OLD ===" << endl;
-
-            const int counts[] = {g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank};
-
-            cout << "========================================================" << endl;
-            cout << "\tBW_DOUBLE_BA_OLD Benchmark Results" << endl;
-            cout << "========================================================" << endl;
-
-            vector<vector<int>> targets(6);
-
-            for (int j = 0; j < 5; j++) {
-                targets[j].resize(counts[j],0);
-                for (int k = 0; k < counts[j]; k++) {
-                    targets[j][k] = k;
-                }
-            }
-
-            for (int j = 0; j < g_config.num_bank/2; j++) {
-                targets[5].push_back(j);
-            }
-
-            vector<void*> stream = createRowHitStreamUseVectors(targets);
+        else if (current_bench == "BW_1R_RAND_BASE_SINGLE" || current_bench == "BW_1R_RAND_BASE_PERCORE") {
+            vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, 1, g_config.num_bg, g_config.num_bank);
+            shuffle(stream.begin(), stream.end(), g_gen);
             BenchResult res = measureBandwidth_old(stream);
-
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << "----------------------------" << endl;
-
-
-            cout << "========================================================" << endl;
+            print_result(res);
         }
 
-        else if (current_bench == "BW_DOUBLE_BA_RM_OLD") {
-            cout << "=== Running BW_DOUBLE_BA_RM_OLD ===" << endl;
-
-            const int counts[] = {g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank};
-
-            cout << "========================================================" << endl;
-            cout << "\tBW_DOUBLE_BA_RM_OLD Benchmark Results" << endl;
-            cout << "========================================================" << endl;
-
-            vector<vector<int>> targets(6);
-
-            for (int j = 0; j < 5; j++) {
-                targets[j].resize(counts[j],0);
-                for (int k = 0; k < counts[j]; k++) {
-                    targets[j][k] = k;
-                }
-            }
-
-            for (int j = 0; j < g_config.num_bank/2; j++) {
-                targets[5].push_back(j);
-            }
-
-            vector<void*> stream = createRowMissStreamUseVectors(targets);
-            BenchResult res = measureBandwidth_old(stream);
-
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << "----------------------------" << endl;
-
-
-            cout << "========================================================" << endl;
+        else if (current_bench == "BW_1R_RAND_PT_SINGLE" || current_bench == "BW_1R_RAND_PT_PERCORE") {
+            cout << "Pattern-based can't be used with random access patterns" << endl;
         }
 
-        else if (current_bench == "BW_DOUBLE_BA_RD") {
-            cout << "=== Running BW_DOUBLE_BA_RD ===" << endl;
-
-            const vector<vector<uint64_t>> masks = {
-                g_config.ch_masks, g_config.slot_masks, g_config.sub_ch_masks,
-                g_config.rank_masks, g_config.bg_masks, g_config.bank_masks
-            };
-            const int counts[] = {g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank};
-
-            cout << "========================================================" << endl;
-            cout << "\tBW_DOUBLE_BA_RD Benchmark Results" << endl;
-            cout << "========================================================" << endl;
-
-            vector<vector<int>> targets(6);
-
-            for (int j = 0; j < 5; j++) {
-                targets[j].resize(counts[j],0);
-                for (int k = 0; k < counts[j]; k++) {
-                    targets[j][k] = k;
-                }
-            }
-
-            for (int j = 0; j < g_config.num_bank/2; j++) {
-                targets[5].push_back(j);
-            }
-
-            vector<void*> stream = createRowMissStreamUseVectors(targets);
-            shuffle(stream.begin(),stream.end(),g_gen);
-
-            BenchResult res = measureBandwidth_old(stream);
-
-
-            cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
-            cout << " - Usage : " << res.usage << " %" << endl;
-            cout << "----------------------------" << endl;
-
-            cout << "========================================================" << endl;
+        else if (current_bench == "BW_1R_RAND_PC_SINGLE" || current_bench == "BW_1R_RAND_PC_PERCORE") {
+            // todo
+            cout << "Todo" << endl;
         }
+
+
 
 
     }

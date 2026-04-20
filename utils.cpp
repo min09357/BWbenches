@@ -23,11 +23,10 @@ vector<string> parseBenchList(const string& input) {
 }
 
 void print_help(const char* prog_name) {
+    // todo: update
     cout << "Usage: " << prog_name << " [options]\n"
          << "Options:\n"
-         << "  -m, --mode <mode>              rd (default) | wr\n"
          << "  -B, --bench <list>             Comma-separated list (e.g., BWSB,DG,BW_ALL)\n"
-         << "                                 Supported: SBDR, DG, DG_burst, BW_ALL, BW_ALL_WO_RK, BWSB, BW_DG, BW_DG_4\n"
          << "  -p, --num_pages <num>          Number of 1GB hugepages to use\n"
          << "  -P, --pool_size <num>          Total pool size of hugepages to allocate for filtering\n"
          << "  -c, --channel_functions <list> CSV hex masks (e.g. 0x1,0x2) (def: 0x0)\n"
@@ -39,13 +38,20 @@ void print_help(const char* prog_name) {
          << "  -R, --row_bitmask <mask>       Single hex mask for row bits (e.g. 0x3fff1c000)\n"
          << "  -C, --column_bitmask <mask>    Single hex mask for col bits (e.g. 0x3f80)\n"
          << "  -e, --seed <seed>              Random seed (optional)\n"
-         << "  -t, --stride <bytes>           Stride for DG_burst (default: 64, 0=random)\n"
-         << "  -T, --burst_length <len>       Burst length n for DG_burst (default: 4)\n"
-         << "  -i, --num_pairs <num>          Number of test pairs to find (default: 50)\n"
          << "  -k, --chunk <size>             OpenMP schedule chunk size (default: 1)\n"
          << "  -d, --debug                    Enable debug output in measureBandwidth\n"
          << "  -a, --all                      Test with varying core counts (1,2,4,8,16...)\n"
          << "  -v, --verbose                  verbose output\n";
+}
+
+void print_result(BenchResult res) {
+    cout << fixed << setprecision(3);
+    cout << " - Throughput : " << res.bw_gbs << " GB/s" << endl;
+    cout << " - Avg Usage : " << res.usage << " %" << endl;
+    cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
+    cout << " - Time         : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
+    cout << " - Elements     : " << setprecision(3) << res.valid_count << " (" << res.valid_count*64/10e9 << " GB)" << endl;
+    cout << "========================================================" << endl;
 }
 
 
@@ -148,5 +154,5 @@ int getMaxOnlyFuncBit() {
 
     if (onlyfunctionmask == 0) return 0;
     return 63 - __builtin_clzll(onlyfunctionmask);
-
 }
+

@@ -20,7 +20,7 @@ sweep_cores,
 
 
 # main()
-pool_size, # the number of total huge pages in node.
+pool_size,
 ch_func,
 slot_func,
 sch_func,
@@ -80,7 +80,7 @@ PC: Pointer Chasing. No overhead but should modify num chains per cores.
 ### access sequence
 
 ```
-SINGLE: Use one, huge access address sequence. Allocated to each core with no overlap.
+SINGLE: Use one, huge address sequence. Allocated to each core with no overlap.
 
-PERCORES: Use small access address sequence for each core.
+PERCORES: Use small address sequence for each core.
 ```
