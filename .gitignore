@@ -1,4 +1,5 @@
 .vscode
 *.o
+benches
 .claude
 results.txt
