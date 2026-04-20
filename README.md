@@ -46,33 +46,40 @@ python3 ./Test.py {node id} {num cores} {num pages to use} {bench options}
 
 BW\_{rank option}\_{access pattern}\_{access method}\_{access sequences}
 
-    ex BW_ALL_HIT_PT_SINGLE
+    ex) BW_ALL_HIT_PT_SINGLE
 
 ### rank option
 
+```
 ALL: all ranks
 
 1R: 1 rank
+```
 
 ### access pattern
 
+```
 HIT: Row hit with interleaving
 
 MISS: Row miss with interleaving
 
-RANKD: Random access
+RAND: Random access
+```
 
 ### access method
 
+```
 BASE: Fetch next access address in DRAM(LLC), every access. Up to 12.5% overhead.
 
 PT: Use patterns to decode address. Almost zero overhead.
 
 PC: Pointer Chasing. No overhead but should modify num chains per cores.
+```
 
 ### access sequence
 
+```
 SINGLE: Use one, huge access address sequence. Allocated to each core with no overlap.
 
 PERCORES: Use small access address sequence for each core.
-
+```
