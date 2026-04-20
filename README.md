@@ -36,10 +36,7 @@ row_mask,
 ## Run
 
 ```bash
-python3 ./Test.py {node id} {num cores} {num pages to use} {bench options}
-# ex)
-# python3 ./Test.py 0 8 8 BW_ALL,BW_ALL_RM
-# python3 ./Test.py 1 all 4 BW_ALL,BW_ALL_RM,TEST
+./Test.sh
 ```
 
 ## Bench options

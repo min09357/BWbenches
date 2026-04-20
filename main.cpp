@@ -303,7 +303,7 @@ int main(int argc, char* argv[])
         else if (current_bench == "BW_ALL_HIT_PC_SINGLE") {
             vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, g_config.num_bank);
             int col_stride = 1;
-            int num_chains_per_cores = 32;
+            int num_chains_per_cores = 8;
             int chain_stride = 1;
             BenchResult res = measureBandwidth_PointerChasing(stream, num_chains_per_cores, chain_stride);
             print_result(res);
@@ -345,7 +345,7 @@ int main(int argc, char* argv[])
         else if (current_bench == "BW_ALL_MISS_PC_SINGLE") {
             int col_stride = 1;
             vector<void*> stream = createStreamRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank,col_stride);
-            int num_chains_per_cores = 32;
+            int num_chains_per_cores = 8;
             int chain_stride = 1;
             BenchResult res = measureBandwidth_PointerChasing(stream, num_chains_per_cores, chain_stride);
             print_result(res);
@@ -405,7 +405,7 @@ int main(int argc, char* argv[])
         else if (current_bench == "BW_1R_HIT_PC_SINGLE") {
             vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, 1, g_config.num_bg, g_config.num_bank);
             int col_stride = 1;
-            int num_chains_per_cores = 32;
+            int num_chains_per_cores = 8;
             int chain_stride = 1;
             BenchResult res = measureBandwidth_PointerChasing(stream, num_chains_per_cores, chain_stride);
             print_result(res);
@@ -447,7 +447,7 @@ int main(int argc, char* argv[])
         else if (current_bench == "BW_1R_MISS_PC_SINGLE") {
             int col_stride = 1;
             vector<void*> stream = createStreamRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,g_config.num_bank,col_stride);
-            int num_chains_per_cores = 32;
+            int num_chains_per_cores = 8;
             int chain_stride = 1;
             BenchResult res = measureBandwidth_PointerChasing(stream, num_chains_per_cores, chain_stride);
             print_result(res);
