@@ -480,6 +480,74 @@ int main(int argc, char* argv[])
             print_result(res);
         }
 
+        else if (current_bench == "TEST") {
+            // miss:hit = 1:0
+            int miss = 0;
+            int hit = 1;
+            BenchResult res = measureBandwidth_old_perCores_withRate(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank, miss, hit);
+            print_result(res);
+        }
+
+        else if (current_bench == "TEST1") {
+            int miss = 1;
+            int hit = 63;
+            BenchResult res = measureBandwidth_withPattern_perCores_withRate(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank, miss, hit);
+            print_result(res);
+        }
+
+        else if (current_bench == "TEST2") {
+            int miss = 1;
+            int hit = 31;
+            BenchResult res = measureBandwidth_withPattern_perCores_withRate(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank, miss, hit);
+            print_result(res);
+        }
+
+        else if (current_bench == "TEST3") {
+            int miss = 1;
+            int hit = 15;
+            BenchResult res = measureBandwidth_withPattern_perCores_withRate(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank, miss, hit);
+            print_result(res);
+        }
+
+        else if (current_bench == "TEST4") {
+            int miss = 1;
+            int hit = 7;
+            BenchResult res = measureBandwidth_withPattern_perCores_withRate(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank, miss, hit);
+            print_result(res);
+        }
+
+        else if (current_bench == "TEST5") {
+            int miss = 1;
+            int hit = 3;
+            BenchResult res = measureBandwidth_withPattern_perCores_withRate(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank, miss, hit);
+            print_result(res); 
+        }
+
+        else if (current_bench == "TEST6") {
+            int miss = 1;
+            int hit = 1;
+            BenchResult res = measureBandwidth_withPattern_perCores_withRate(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank, miss, hit);
+            print_result(res); 
+            
+            
+            
+            
+            
+            // // single, 2rank, miss:hit = 1:7
+            // int miss = 1;
+            // int hit = 1;
+
+            // // pair<vector<uint64_t>,vector<int>> pattern_pair = getPatternswithRate(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,g_config.num_bank, miss, hit);
+            // pair<vector<uint64_t>,vector<int>> pattern_pair = getPatternswithRate(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,g_config.num_bank, miss, hit);
+            // vector<uint64_t> patterns = pattern_pair.first;
+            // int row_stride = pattern_pair.second[0];
+            // int col_stride = pattern_pair.second[1];
+            // vector<uint64_t> stream = createBaseAddrsRowMiss(row_stride, col_stride,1);
+            // BenchResult res = measureBandwidth_withPattern(stream, patterns);
+            // print_result(res);
+        }
+
+
 
 
 

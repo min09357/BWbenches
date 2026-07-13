@@ -50,7 +50,7 @@ void print_result(BenchResult res) {
     cout << " - Avg Usage : " << res.usage << " %" << endl;
     cout << " - Avg Latency: " << res.latency_ns << " ns" << endl;
     cout << " - Time         : " << setprecision(6) << res.elapsed_sec << " sec" << endl;
-    cout << " - Elements     : " << setprecision(3) << res.valid_count << " (" << res.valid_count*64/10e9 << " GB)" << endl;
+    cout << " - Elements     : " << setprecision(3) << res.valid_count << " (" << (double)res.valid_count*64/1e9 << " GB, " << (double)res.valid_count*64/(1<<30) << " GiB)" << endl;
     cout << "========================================================" << endl;
 }
 
@@ -169,4 +169,9 @@ vector<int> get_thread_list() {
         thread_list.push_back(max_hardware_threads);
     }
     return thread_list;
+}
+
+uint32_t next_pow2(uint32_t x) {
+    if (x == 0) return 1;
+    return 1U << (32 - __builtin_clz(x));
 }

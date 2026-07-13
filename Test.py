@@ -7,7 +7,8 @@ import os
 # Not CPU frequency fixed by user, but the base frequency of the CPU.
 cpu_base_freq   = "3.7" 
 
-dram_bw    = "38.4" # GB/s
+# dram_bw    = "38.4" # GB/s
+dram_bw    = "44.8" # GB/s
 
 
 # If your system has multiple NUMA nodes, set numa_stride to 2.
@@ -21,13 +22,14 @@ numa_stride = 1
 # If True, it will run the benchmark multiple times, increasing the number of cores used each time (starting from n core up to NUM_CORES). 
 # False, it will run the benchmark only once with the specified number of cores.
 sweep_cores = True 
+# sweep_cores = False 
 
 # Minimum number of cores to start with when sweep_cores is True. 
 min_cores = 3   
 
 
 # Number of pointer chasing chains per core for pointer chasing benchmarks to saturate DRAM bandwidth. 
-num_chains_per_core = 4  
+num_chains_per_core = 32  
 
 
 
@@ -60,19 +62,35 @@ def main():
     if node_id == 0:
         # Total number of 1G Hugepages in node
         # Note: This is not the number of pages to use, but the total number of pages available in node. Check grub file.
-        pool_size = 20  
+        # pool_size = 20  
+
+        # 0x0 if only one CH/DIMM/SCH/RANK
+        # ch_func   = "0x0"
+        # slot_func = "0x0"
+        # sch_func  = "0x82600"
+        # rank_func = "0x42120000"
+
+        # bg_func   = "0x84042100,0x108404000,0x210808000"
+        # ba_func    = "0x421090000,0x240000"
+
+        # col_mask  = "0x1bc0"
+        # row_mask  = "0x7fff80000"
+
+        pool_size = 8  
 
         # 0x0 if only one CH/DIMM/SCH/RANK
         ch_func   = "0x0"
         slot_func = "0x0"
         sch_func  = "0x82600"
-        rank_func = "0x42120000"
+        rank_func = "0x0"
 
-        bg_func   = "0x84042100,0x108404000,0x210808000"
-        ba_func    = "0x421090000,0x240000"
+        bg_func   = "0x42102100,0x84204000,0x108408000"
+        ba_func    = "0x210850000,0x210a0000"
 
         col_mask  = "0x1bc0"
-        row_mask  = "0x7fff80000"
+        row_mask  = "0x3fffc0000"
+
+
     # elif node_id == 1:
         # # Total number of 1G Hugepages in node
         # pool_size = 20  

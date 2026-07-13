@@ -7,7 +7,7 @@
 vector<void*> createStreamRowHit(int nch, int nslot, int nsc, int nrk, int nbg, int nba);
 vector<void*> createStreamRowMiss(int nch, int nslot, int nsc, int nrk, int nbg, int nba, int col_stride = 1);
 
-
+vector<void*> createStreamwithRate(int nch, int nslot, int nsc, int nrk, int nbg, int nba, int miss, int hit, int num_stream);
 
 // Vector-based stream creators
 vector<void*> createRowHitStreamUseVectors(const vector<vector<int>>& targets);
@@ -18,6 +18,9 @@ vector<void*> createRowMissStreamUseVectors(const vector<vector<int>>& targets, 
 // Use Patterns
 pair<vector<uint64_t>,vector<int>> getPatternsRowHit(int nch, int nslot, int nsc, int nrk, int nbg, int nba);
 pair<vector<uint64_t>,int> getPatternsRowMiss(int nch, int nslot, int nsc, int nrk, int nbg, int nba, int col_stride = 1);
+
+pair<vector<uint64_t>,vector<int>> getPatternswithRate(int nch, int nslot, int nsc, int nrk, int nbg, int nba, int miss, int hit);
+
 pair<vector<uint64_t>,vector<int>> getPatternsRowHitUseVectors(vector<vector<int>> targets);
 pair<vector<uint64_t>,int> getPatternsRowMissUseVectors(vector<vector<int>> targets);
 

@@ -3,8 +3,12 @@
 #include "types.h"
 
 BenchResult measureBandwidth_old(const vector<void*>& stream);
-BenchResult measureBandwidth_withPattern(const vector<uint64_t>& stream, const vector<uint64_t>& pattern);
 
+BenchResult measureBandwidth_old_perCores_withRate(int nch, int nslot, int nsc, int nrk, int nbg, int nba, int miss, int hit);
+
+
+BenchResult measureBandwidth_withPattern(const vector<uint64_t>& stream, const vector<uint64_t>& pattern);
+BenchResult measureBandwidth_withPattern_perCores_withRate(int nch, int nslot, int nsc, int nrk, int nbg, int nba, int miss, int hit);
 
 BenchResult measureBandwidth_PointerChasing(const vector<void*>& stream, int num_chains_per_cores, int chain_stride = 1);
 

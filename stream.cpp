@@ -52,6 +52,61 @@ vector<void*> createStreamRowMiss(int nch, int nslot, int nsc, int nrk, int nbg,
 
 
 
+vector<void*> createStreamwithRate(int nch, int nslot, int nsc, int nrk, int nbg, int nba, int miss, int hit, int num_stream) {
+
+    int num_banks = nch * nslot * nsc * nrk * nbg * nba;
+
+    if (miss == 0) {
+        miss = 1;
+        hit = g_config.max_col_idx - 1;
+    }
+
+    if (hit == 0) {
+        // All miss.
+        miss = 1;
+    }
+
+
+    int iteration_r = g_config.num_rows / num_stream / miss;
+    int num_rows_per_stream = iteration_r * miss;
+
+    int iteration_c = g_config.max_col_idx / (hit + 1);
+
+    int idx = 0;
+
+    vector<void*> stream(num_stream * num_banks * (miss + hit) * iteration_r * iteration_c);
+
+    // #pragma omp parallel for
+    for (int ns=0; ns<num_stream; ns++)
+    for (int c1=0; c1<iteration_c; c1++)
+    for (int r1=0; r1<iteration_r; r1++) {
+        for (int r0=0; r0<miss; r0++)
+        for(int s=0; s<nslot; s++)
+        for(int b=0; b<nba; b++)
+        for(int bg=0; bg<nbg; bg++)
+        for(int rk=0; rk<nrk; rk++)
+        for(int sc=0; sc<nsc; sc++)
+        for(int ch=0; ch<nch; ch++) {
+            stream[idx++] = addr[ch][s][sc][rk][bg][b][ns * num_rows_per_stream + r1 * miss + r0]->cols[c1 * (hit + 1)];
+        }
+
+        for (int c0=1; c0<(hit+1); c0++)
+        for(int s=0; s<nslot; s++)
+        for(int b=0; b<nba; b++)
+        for(int bg=0; bg<nbg; bg++)
+        for(int rk=0; rk<nrk; rk++)
+        for(int sc=0; sc<nsc; sc++)
+        for(int ch=0; ch<nch; ch++) {
+            stream[idx++] = addr[ch][s][sc][rk][bg][b][ns * num_rows_per_stream + r1 * miss + miss - 1]->cols[c1 * (hit + 1) + c0];
+        }
+
+    }
+
+
+    return stream;
+}
+
+
 
 
 
@@ -112,6 +167,7 @@ vector<void*> createRowMissStreamUseVectors(const vector<vector<int>>& targets, 
 
 
 pair<vector<uint64_t>,vector<int>> getPatternsRowHit(int nch, int nslot, int nsc, int nrk, int nbg, int nba) {
+    // int threshold = 4096;
     int threshold = 256;
     // int threshold = 64;
     int num_patterns = nch * nslot * nsc * nrk * nbg * nba;
@@ -186,6 +242,7 @@ pair<vector<uint64_t>,vector<int>> getPatternsRowHit(int nch, int nslot, int nsc
 
 
 pair<vector<uint64_t>,int> getPatternsRowMiss(int nch, int nslot, int nsc, int nrk, int nbg, int nba, int col_stride) {
+    // int threshold = 4096;
     int threshold = 256;
     // int threshold = 64;
     int num_patterns = nch * nslot * nsc * nrk * nbg * nba * col_stride;
@@ -243,6 +300,106 @@ pair<vector<uint64_t>,int> getPatternsRowMiss(int nch, int nslot, int nsc, int n
 
     return {patterns, row_stride};
 }
+
+
+
+
+
+pair<vector<uint64_t>,vector<int>> getPatternswithRate(int nch, int nslot, int nsc, int nrk, int nbg, int nba, int miss, int hit) {
+    int threshold = 256;
+    // int row_stride;
+    // int col_stride;
+
+    bool isallhit = false;
+
+    
+    if (hit == 0) {
+        // All miss.
+        miss = 1;
+    }
+
+    if (miss == 0) {
+        // All hit.
+        isallhit = true;
+        miss = 1;
+        hit = 0;
+    }
+
+
+    // if (miss == 1) row_stride = 1;
+    // else row_stride = 1 << (32 - __builtin_clzl(miss - 1));
+
+    int row_stride = next_pow2(miss - 1);
+
+    int col_stride = next_pow2(hit);
+
+    int num_patterns = nch * nslot * nsc * nrk * nbg * nba * (miss + hit);
+
+    // int total_row_stride = row_stride;
+
+    int iteration = 1;
+
+    if (num_patterns >= threshold) {
+        cout << "num_patterns is " << num_patterns << endl;
+    }
+    else if (isallhit) {
+        hit = (threshold + num_patterns - 1) / num_patterns * (hit + 1) - 1;
+        col_stride = next_pow2(hit);
+        cout << "num_patterns is changed from " << num_patterns << " to ";
+        num_patterns = nch * nslot * nsc * nrk * nbg * nba * (miss + hit);
+            cout << num_patterns << endl;
+    }
+    else {
+        iteration = (threshold + num_patterns - 1) / num_patterns;
+        cout << "num_patterns is changed from " << num_patterns << " to " << num_patterns * iteration << endl;
+        row_stride = next_pow2(miss * iteration - 1);
+        num_patterns *= iteration;
+    }
+
+    cout << "row_stride: " << row_stride << ", col_stride: " << col_stride << endl;
+
+    
+    vector<uint64_t> patterns(num_patterns);
+
+    uint64_t base_addr = (uint64_t)addr[0][0][0][0][0][0][0]->cols[0];
+    int idx = 0;
+
+
+    // int successive_access = 2;
+    // successive_access = ((hit + 1) > successive_access) ? (successive_access) : (hit + 1);
+
+    for (int it=0; it<iteration; it++){
+        for (int r=0; r<miss-1; r++)
+        for(int s=0; s<nslot; s++)
+        for(int b=0; b<nba; b++)
+        for(int bg=0; bg<nbg; bg++)
+        for(int rk=0; rk<nrk; rk++)
+        for(int sc=0; sc<nsc; sc++)
+        for(int ch=0; ch<nch; ch++) {
+            uint64_t current_addr = (uint64_t)addr[ch][s][sc][rk][bg][b][it*miss+r]->cols[0];
+            patterns[idx++] = (base_addr ^ current_addr);
+        }
+        // for (int c=0; c<(hit+1); c++)
+        for(int s=0; s<nslot; s++)
+        for(int b=0; b<nba; b++)
+        for(int bg=0; bg<nbg; bg++)
+        for(int rk=0; rk<nrk; rk++)
+        for(int sc=0; sc<nsc; sc++)
+        for(int ch=0; ch<nch; ch++)
+        for(int c=0; c<(hit+1); c++) {
+            uint64_t current_addr = (uint64_t)addr[ch][s][sc][rk][bg][b][it*miss+miss-1]->cols[c];
+            patterns[idx++] = (base_addr ^ current_addr);
+        }
+    }
+    
+
+
+    return {patterns, {row_stride, col_stride}};
+}
+
+
+
+
 
 pair<vector<uint64_t>,vector<int>> getPatternsRowHitUseVectors(vector<vector<int>> targets) {
     if (targets.size() != 6) {
@@ -346,59 +503,11 @@ pair<vector<uint64_t>,int> getPatternsRowMissUseVectors(vector<vector<int>> targ
 }
 
 
-// vector<uint64_t> createBaseAddrsRowHit(int row_stride, int col_stride) {
-
-//     if (col_stride > 1) {
-//         cout << "stream size changed from " << g_config.num_rows * g_config.max_col_idx << " to " << g_config.num_rows / row_stride * g_config.max_col_idx / col_stride << endl;
-//     }
-//     vector<uint64_t> stream(g_config.num_rows / row_stride * g_config.max_col_idx / col_stride);
-
-//     #pragma omp parallel for
-//     for(size_t r=0; r<(g_config.num_rows/row_stride); r++) {
-//         for(size_t c=0; c<(g_config.max_col_idx/col_stride); c++) {
-//             size_t idx = r * (g_config.max_col_idx/col_stride) + c;
-//             stream[idx] = (uint64_t)addr[0][0][0][0][0][0][r*row_stride]->cols[c*col_stride];
-//         }
-//     }
-
-//     return stream;
-// }
-
-// vector<uint64_t> createBaseAddrsRowMiss(int row_stride, int col_stride) {
-
-//     if (row_stride > 1) {
-//         cout << "stream size changed from " << g_config.num_rows * g_config.max_col_idx << " to " << g_config.num_rows / row_stride * g_config.max_col_idx / col_stride << endl;
-//     }
-//     vector<uint64_t> stream(g_config.num_rows / row_stride * g_config.max_col_idx / col_stride);
-
-//     #pragma omp parallel for
-//     for(size_t c=0; c<g_config.max_col_idx / col_stride; c++) {
-//         for(size_t r=0; r<(g_config.num_rows/row_stride); r++) {
-//             size_t idx = c * (g_config.num_rows/row_stride) + r;
-//             stream[idx] = (uint64_t)addr[0][0][0][0][0][0][r*row_stride]->cols[c*col_stride];
-//         }
-//     }
-
-//     return stream;
-// }
-
-
-
-
-
-
-
-
-
-
-
-
 
 vector<uint64_t> createBaseAddrsRowHit(int row_stride, int col_stride, int num_stream) {
 
-    
-
     int num_baserow_per_stream = (g_config.num_rows / num_stream) / row_stride;
+    // int num_baserow_per_stream = (g_config.num_rows / row_stride) / num_stream;
     int num_basecol_per_row = g_config.max_col_idx/col_stride;
 
     vector<uint64_t> stream(num_baserow_per_stream * num_stream * num_basecol_per_row);
@@ -419,9 +528,8 @@ vector<uint64_t> createBaseAddrsRowHit(int row_stride, int col_stride, int num_s
 
 vector<uint64_t> createBaseAddrsRowMiss(int row_stride, int col_stride, int num_stream) {
 
-    
-
     int num_baserow_per_stream = (g_config.num_rows / num_stream) / row_stride;
+    // int num_baserow_per_stream = (g_config.num_rows / row_stride) / num_stream;
     int num_basecol_per_row = g_config.max_col_idx/col_stride;
 
 

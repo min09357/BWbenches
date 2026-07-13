@@ -3,10 +3,6 @@
 #include "types.h"
 
 static const set<string> IMPLEMENTED_BENCHMARKS = {
-    "BW_ALL_RD","BW_ALL", "BW_ALL_OLD", "BW_ALL_RM", "BW_ALL_RM_OLD", "BW_ALL_WO_RK", "BW_ALL_WO_RK_RM",
-    "BW_SB", "BW_SB_RM", "BW_DG", "BW_DG_4", "BW_DOUBLE_BANK", "BW_HALF_BANK", "BW_HALF_BANK_WO_RK", "BW_HALF_BANK_RM",
-    "BW_SINGLE_BA", "BW_SINGLE_BA_RM", "BW_SINGLE_BA_WO_RK_RM", "BW_SINGLE_BA_OLD", "BW_SINGLE_BA_RM_OLD", "BW_SINGLE_BA_RD",
-    "BW_DOUBLE_BA", "BW_DOUBLE_BA_RM", "BW_DOUBLE_BA_WO_RK_RM", "BW_DOUBLE_BA_OLD", "BW_DOUBLE_BA_RM_OLD", "BW_DOUBLE_BA_RD",
     "TEST", "TEST1", "TEST2", "TEST3", "TEST4", "TEST5", "TEST6",
     
 
@@ -52,3 +48,5 @@ int getMaxOnlyFuncBit();
 
 
 vector<int> get_thread_list();
+
+uint32_t next_pow2(uint32_t x);
