@@ -7,8 +7,8 @@ import os
 # Not CPU frequency fixed by user, but the base frequency of the CPU.
 cpu_base_freq   = "3.7" 
 
-# dram_bw    = "38.4" # GB/s
-dram_bw    = "44.8" # GB/s
+dram_bw    = "38.4" # GB/s
+# dram_bw    = "44.8" # GB/s
 
 
 # If your system has multiple NUMA nodes, set numa_stride to 2.
@@ -65,30 +65,30 @@ def main():
         # pool_size = 20  
 
         # 0x0 if only one CH/DIMM/SCH/RANK
-        # ch_func   = "0x0"
-        # slot_func = "0x0"
-        # sch_func  = "0x82600"
-        # rank_func = "0x42120000"
-
-        # bg_func   = "0x84042100,0x108404000,0x210808000"
-        # ba_func    = "0x421090000,0x240000"
-
-        # col_mask  = "0x1bc0"
-        # row_mask  = "0x7fff80000"
-
-        pool_size = 8  
-
-        # 0x0 if only one CH/DIMM/SCH/RANK
         ch_func   = "0x0"
         slot_func = "0x0"
         sch_func  = "0x82600"
-        rank_func = "0x0"
+        rank_func = "0x42120000"
 
-        bg_func   = "0x42102100,0x84204000,0x108408000"
-        ba_func    = "0x210850000,0x210a0000"
+        bg_func   = "0x84042100,0x108404000,0x210808000"
+        ba_func    = "0x421090000,0x240000"
 
         col_mask  = "0x1bc0"
-        row_mask  = "0x3fffc0000"
+        row_mask  = "0x7fff80000"
+
+        pool_size = 8  
+
+        # # 0x0 if only one CH/DIMM/SCH/RANK
+        # ch_func   = "0x0"
+        # slot_func = "0x0"
+        # sch_func  = "0x82600"
+        # rank_func = "0x0"
+
+        # bg_func   = "0x42102100,0x84204000,0x108408000"
+        # ba_func    = "0x210850000,0x210a0000"
+
+        # col_mask  = "0x1bc0"
+        # row_mask  = "0x3fffc0000"
 
 
     # elif node_id == 1:
