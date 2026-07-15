@@ -5,8 +5,10 @@ import os
 
 
 # Not CPU frequency fixed by user, but the base frequency of the CPU.
+# cpu_base_freq   = "2.4" 
 cpu_base_freq   = "3.7" 
 
+# dram_bw    = "23.464" # GB/s
 dram_bw    = "38.4" # GB/s
 # dram_bw    = "44.8" # GB/s
 
@@ -16,6 +18,7 @@ dram_bw    = "38.4" # GB/s
 # node 0 cpus: 0 1 2 3 ... => numa_stride = 1
 # node 0 cpus: 0 2 4 6 ... => numa_stride = 2
 numa_stride = 1
+# numa_stride = 2
 
 
 
