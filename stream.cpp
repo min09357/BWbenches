@@ -7,20 +7,28 @@
 
 
 vector<void*> createStreamRowHit(int nch, int nslot, int nsc, int nrk, int nbg, int nba) {
-    int num_banks = nch * nslot * nsc * nrk * nbg * nba;
+    int num_banks = abs(nch * nslot * nsc * nrk * nbg * nba);
 
     vector<void*> stream(g_config.num_rows * g_config.max_col_idx * num_banks);
+
+    auto ch_indices = make_indices(nch, g_config.num_ch);
+    auto slot_indices = make_indices(nslot, g_config.num_slot);
+    auto sc_indices = make_indices(nsc, g_config.num_sc);
+    auto rk_indices = make_indices(nrk, g_config.num_rk);
+    auto bg_indices = make_indices(nbg, g_config.num_bg);
+    auto bank_indices = make_indices(nba, g_config.num_bank);
+
 
     int idx = 0;
 
     for (int r=0; r<g_config.num_rows; r++)
     for (int c=0; c<g_config.max_col_idx; c++)
-    for(int s=0; s<nslot; s++)
-    for(int ba=0; ba<nba; ba++)
-    for(int bg=0; bg<nbg; bg++)
-    for(int rk=0; rk<nrk; rk++)
-    for(int sc=0; sc<nsc; sc++)
-    for(int ch=0; ch<nch; ch++) {
+    for(int s : slot_indices)
+    for(int ba : bank_indices)
+    for(int bg : bg_indices)
+    for(int rk : rk_indices)
+    for (int sc : sc_indices)
+    for (int ch : ch_indices) {
         stream[idx++] = addr[ch][s][sc][rk][bg][ba][r]->cols[c];
     }
 
@@ -29,21 +37,28 @@ vector<void*> createStreamRowHit(int nch, int nslot, int nsc, int nrk, int nbg, 
 
 
 vector<void*> createStreamRowMiss(int nch, int nslot, int nsc, int nrk, int nbg, int nba, int col_stride) {
-    int num_banks = nch * nslot * nsc * nrk * nbg * nba;
+    int num_banks = abs(nch * nslot * nsc * nrk * nbg * nba);
 
     vector<void*> stream(g_config.num_rows * g_config.max_col_idx * num_banks);
+
+    auto ch_indices = make_indices(nch, g_config.num_ch);
+    auto slot_indices = make_indices(nslot, g_config.num_slot);
+    auto sc_indices = make_indices(nsc, g_config.num_sc);
+    auto rk_indices = make_indices(nrk, g_config.num_rk);
+    auto bg_indices = make_indices(nbg, g_config.num_bg);
+    auto bank_indices = make_indices(nba, g_config.num_bank);
 
     int idx = 0;
 
     for (int c1=0; c1<g_config.max_col_idx/col_stride; c1++)
     for (int r=0; r<g_config.num_rows; r++)
     for (int c0=0; c0<col_stride; c0++)
-    for(int s=0; s<nslot; s++)
-    for(int ba=0; ba<nba; ba++)
-    for(int bg=0; bg<nbg; bg++)
-    for(int rk=0; rk<nrk; rk++)
-    for(int sc=0; sc<nsc; sc++)
-    for(int ch=0; ch<nch; ch++) {
+    for(int s : slot_indices)
+    for(int ba : bank_indices)
+    for(int bg : bg_indices)
+    for(int rk : rk_indices)
+    for (int sc : sc_indices)
+    for (int ch : ch_indices) {
         stream[idx++] = addr[ch][s][sc][rk][bg][ba][r]->cols[c1 * col_stride + c0];
     }
 
@@ -170,7 +185,7 @@ pair<vector<uint64_t>,vector<int>> getPatternsRowHit(int nch, int nslot, int nsc
     // int threshold = 4096;
     int threshold = 256;
     // int threshold = 64;
-    int num_patterns = nch * nslot * nsc * nrk * nbg * nba;
+    int num_patterns = abs(nch * nslot * nsc * nrk * nbg * nba);
     if (__builtin_popcount(num_patterns) != 1) {
         cerr << "Invalid pattern. Num patterns should be power of 2." << endl;
         exit(1);
@@ -217,8 +232,8 @@ pair<vector<uint64_t>,vector<int>> getPatternsRowHit(int nch, int nslot, int nsc
     for(int b : bank_indices)
     for(int bg : bg_indices)
     for(int rk : rk_indices)
-    for(int sc=0; sc<nsc; sc++)
-    for(int ch=0; ch<nch; ch++) {
+    for (int sc : sc_indices)
+    for (int ch : ch_indices) {
         uint64_t current_addr = (uint64_t)addr[ch][s][sc][rk][bg][b][r]->cols[c];
         patterns[idx++] = (base_addr ^ current_addr);
     }
@@ -272,7 +287,7 @@ pair<vector<uint64_t>,int> getPatternsRowMiss(int nch, int nslot, int nsc, int n
     // int threshold = 4096;
     int threshold = 256;
     // int threshold = 64;
-    int num_patterns = nch * nslot * nsc * nrk * nbg * nba * col_stride;
+    int num_patterns = abs(nch * nslot * nsc * nrk * nbg * nba * col_stride);
     if (__builtin_popcount(num_patterns) != 1) {
         cerr << "Invalid pattern. Num patterns should be power of 2." << endl;
         exit(1);
@@ -309,8 +324,8 @@ pair<vector<uint64_t>,int> getPatternsRowMiss(int nch, int nslot, int nsc, int n
     for(int b : bank_indices)
     for(int bg : bg_indices)
     for(int rk : rk_indices)
-    for(int sc=0; sc<nsc; sc++)
-    for(int ch=0; ch<nch; ch++) {
+    for (int sc : sc_indices)
+    for (int ch : ch_indices) {
         uint64_t current_addr = (uint64_t)addr[ch][s][sc][rk][bg][b][r]->cols[c];
         patterns[idx++] = (base_addr ^ current_addr);
     }
