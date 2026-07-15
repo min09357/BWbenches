@@ -5,6 +5,7 @@ import os
 
 
 # Not CPU frequency fixed by user, but the base frequency of the CPU.
+# cpu_base_freq   = "2.0" 
 # cpu_base_freq   = "2.4" 
 cpu_base_freq   = "3.7" 
 
@@ -110,6 +111,19 @@ def main():
 
         # col_mask  = "0x5f80"
         # row_mask  = "0x7ffe38000"
+
+
+        # # SPR 2R
+        # ch_func   = "0x0"
+        # slot_func = "0x0"
+        # sch_func  = "0x40"
+        # rank_func = "0x80"
+
+        # bg_func   = "0x10000100,0x20000200,0x100001400"
+        # ba_func    = "0x40000800,0x80001000"
+
+        # col_mask  = "0xfe000"
+        # row_mask  = "0xffff00000"
 
 
     # elif node_id == 1:
