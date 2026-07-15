@@ -6,6 +6,7 @@ NUMA_NODE=0
 NUM_CORES="all"
 # NUM_CORES="16"
 
+# NUM_PAGES=8
 NUM_PAGES=16
 
 ISRECORD=1  # 1: true, else: false

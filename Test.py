@@ -32,7 +32,7 @@ min_cores = 3
 
 
 # Number of pointer chasing chains per core for pointer chasing benchmarks to saturate DRAM bandwidth. 
-num_chains_per_core = 64  
+num_chains_per_core = 32 
 
 
 
@@ -67,7 +67,26 @@ def main():
         # Note: This is not the number of pages to use, but the total number of pages available in node. Check grub file.
         # pool_size = 20  
 
+        pool_size = 16  
+
+
         # 0x0 if only one CH/DIMM/SCH/RANK
+
+
+        # # Arrow 1R
+        # ch_func   = "0x0"
+        # slot_func = "0x0"
+        # sch_func  = "0x82600"
+        # rank_func = "0x0"
+
+        # bg_func   = "0x42102100,0x84204000,0x108408000"
+        # ba_func    = "0x210850000,0x210a0000"
+
+        # col_mask  = "0x1bc0"
+        # row_mask  = "0x3fffc0000"
+
+
+        # Arrow 2R
         ch_func   = "0x0"
         slot_func = "0x0"
         sch_func  = "0x82600"
@@ -79,19 +98,18 @@ def main():
         col_mask  = "0x1bc0"
         row_mask  = "0x7fff80000"
 
-        pool_size = 8  
 
-        # # 0x0 if only one CH/DIMM/SCH/RANK
+        # # Cascade 2R
         # ch_func   = "0x0"
         # slot_func = "0x0"
-        # sch_func  = "0x82600"
-        # rank_func = "0x0"
+        # sch_func  = "0x0"
+        # rank_func = "0x2000"
 
-        # bg_func   = "0x42102100,0x84204000,0x108408000"
-        # ba_func    = "0x210850000,0x210a0000"
+        # bg_func   = "0x40,0x40000"
+        # ba_func    = "0x80000,0x100000"
 
-        # col_mask  = "0x1bc0"
-        # row_mask  = "0x3fffc0000"
+        # col_mask  = "0x5f80"
+        # row_mask  = "0x7ffe38000"
 
 
     # elif node_id == 1:
