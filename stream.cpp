@@ -205,7 +205,7 @@ pair<vector<uint64_t>,vector<int>> getPatternsRowHit(int nch, int nslot, int nsc
 
     auto ch_indices = make_indices(nch, g_config.num_ch);
     auto slot_indices = make_indices(nslot, g_config.num_slot);
-    auto sc_indices = make_indices(nsc, g_config.num_sub_ch);
+    auto sc_indices = make_indices(nsc, g_config.num_sc);
     auto rk_indices = make_indices(nrk, g_config.num_rk);
     auto bg_indices = make_indices(nbg, g_config.num_bg);
     auto bank_indices = make_indices(nba, g_config.num_bank);
@@ -297,7 +297,7 @@ pair<vector<uint64_t>,int> getPatternsRowMiss(int nch, int nslot, int nsc, int n
 
     auto ch_indices = make_indices(nch, g_config.num_ch);
     auto slot_indices = make_indices(nslot, g_config.num_slot);
-    auto sc_indices = make_indices(nsc, g_config.num_sub_ch);
+    auto sc_indices = make_indices(nsc, g_config.num_sc);
     auto rk_indices = make_indices(nrk, g_config.num_rk);
     auto bg_indices = make_indices(nbg, g_config.num_bg);
     auto bank_indices = make_indices(nba, g_config.num_bank);
