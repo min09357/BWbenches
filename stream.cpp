@@ -203,12 +203,12 @@ pair<vector<uint64_t>,vector<int>> getPatternsRowHit(int nch, int nslot, int nsc
     uint64_t base_addr = (uint64_t)addr[0][0][0][0][0][0][0]->cols[0];
     int idx = 0;
 
-    auto ch_indices = make_indices(nch, g_config.num_channels);
-    auto slot_indices = make_indices(nslot, g_config.num_slots);
-    auto sc_indices = make_indices(nsc, g_config.num_sub_channels);
-    auto rk_indices = make_indices(nrk, g_config.num_ranks);
-    auto bg_indices = make_indices(nbg, g_config.num_bgs);
-    auto bank_indices = make_indices(nba, g_config.num_banks);
+    auto ch_indices = make_indices(nch, g_config.num_ch);
+    auto slot_indices = make_indices(nslot, g_config.num_slot);
+    auto sc_indices = make_indices(nsc, g_config.num_sub_ch);
+    auto rk_indices = make_indices(nrk, g_config.num_rk);
+    auto bg_indices = make_indices(nbg, g_config.num_bg);
+    auto bank_indices = make_indices(nba, g_config.num_bank);
 
 
     for (int r=0; r<row_stride; r++)
@@ -268,7 +268,7 @@ pair<vector<uint64_t>,vector<int>> getPatternsRowHit(int nch, int nslot, int nsc
 
 pair<vector<uint64_t>,int> getPatternsRowMiss(int nch, int nslot, int nsc, int nrk, int nbg, int nba, int col_stride) {
     // col_stride: to control hit rate
-    
+
     // int threshold = 4096;
     int threshold = 256;
     // int threshold = 64;
@@ -295,12 +295,12 @@ pair<vector<uint64_t>,int> getPatternsRowMiss(int nch, int nslot, int nsc, int n
 
 
 
-    auto ch_indices = make_indices(nch, g_config.num_channels);
-    auto slot_indices = make_indices(nslot, g_config.num_slots);
-    auto sc_indices = make_indices(nsc, g_config.num_sub_channels);
-    auto rk_indices = make_indices(nrk, g_config.num_ranks);
-    auto bg_indices = make_indices(nbg, g_config.num_bgs);
-    auto bank_indices = make_indices(nba, g_config.num_banks);
+    auto ch_indices = make_indices(nch, g_config.num_ch);
+    auto slot_indices = make_indices(nslot, g_config.num_slot);
+    auto sc_indices = make_indices(nsc, g_config.num_sub_ch);
+    auto rk_indices = make_indices(nrk, g_config.num_rk);
+    auto bg_indices = make_indices(nbg, g_config.num_bg);
+    auto bank_indices = make_indices(nba, g_config.num_bank);
 
 
     for (int r=0; r<row_stride; r++)
