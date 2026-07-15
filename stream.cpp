@@ -203,17 +203,42 @@ pair<vector<uint64_t>,vector<int>> getPatternsRowHit(int nch, int nslot, int nsc
     uint64_t base_addr = (uint64_t)addr[0][0][0][0][0][0][0]->cols[0];
     int idx = 0;
 
+    auto ch_indices = make_indices(nch, g_config.num_channels);
+    auto slot_indices = make_indices(nslot, g_config.num_slots);
+    auto sc_indices = make_indices(nsc, g_config.num_sub_channels);
+    auto rk_indices = make_indices(nrk, g_config.num_ranks);
+    auto bg_indices = make_indices(nbg, g_config.num_bgs);
+    auto bank_indices = make_indices(nba, g_config.num_banks);
+
+
     for (int r=0; r<row_stride; r++)
     for (int c=0; c<col_stride; c++)
-    for(int s=0; s<nslot; s++)
-    for(int b=0; b<nba; b++)
-    for(int bg=0; bg<nbg; bg++)
-    for(int rk=0; rk<nrk; rk++)
+    for(int s : slot_indices)
+    for(int b : bank_indices)
+    for(int bg : bg_indices)
+    for(int rk : rk_indices)
     for(int sc=0; sc<nsc; sc++)
     for(int ch=0; ch<nch; ch++) {
         uint64_t current_addr = (uint64_t)addr[ch][s][sc][rk][bg][b][r]->cols[c];
         patterns[idx++] = (base_addr ^ current_addr);
     }
+
+
+
+
+    // for (int r=0; r<row_stride; r++)
+    // for (int c=0; c<col_stride; c++)
+    // for(int s=0; s<nslot; s++)
+    // for(int b=0; b<nba; b++)
+    // for(int bg=0; bg<nbg; bg++)
+    // for(int rk=0; rk<nrk; rk++)
+    // for(int sc=0; sc<nsc; sc++)
+    // for(int ch=0; ch<nch; ch++) {
+    //     uint64_t current_addr = (uint64_t)addr[ch][s][sc][rk][bg][b][r]->cols[c];
+    //     patterns[idx++] = (base_addr ^ current_addr);
+    // }
+
+
 
     // int numinterleavebg = 8;
 
@@ -242,6 +267,8 @@ pair<vector<uint64_t>,vector<int>> getPatternsRowHit(int nch, int nslot, int nsc
 
 
 pair<vector<uint64_t>,int> getPatternsRowMiss(int nch, int nslot, int nsc, int nrk, int nbg, int nba, int col_stride) {
+    // col_stride: to control hit rate
+    
     // int threshold = 4096;
     int threshold = 256;
     // int threshold = 64;
@@ -267,17 +294,39 @@ pair<vector<uint64_t>,int> getPatternsRowMiss(int nch, int nslot, int nsc, int n
     int idx = 0;
 
 
+
+    auto ch_indices = make_indices(nch, g_config.num_channels);
+    auto slot_indices = make_indices(nslot, g_config.num_slots);
+    auto sc_indices = make_indices(nsc, g_config.num_sub_channels);
+    auto rk_indices = make_indices(nrk, g_config.num_ranks);
+    auto bg_indices = make_indices(nbg, g_config.num_bgs);
+    auto bank_indices = make_indices(nba, g_config.num_banks);
+
+
     for (int r=0; r<row_stride; r++)
     for (int c=0; c<col_stride; c++)
-    for(int s=0; s<nslot; s++)
-    for(int b=0; b<nba; b++)
-    for(int bg=0; bg<nbg; bg++)
-    for(int rk=0; rk<nrk; rk++)
+    for(int s : slot_indices)
+    for(int b : bank_indices)
+    for(int bg : bg_indices)
+    for(int rk : rk_indices)
     for(int sc=0; sc<nsc; sc++)
     for(int ch=0; ch<nch; ch++) {
         uint64_t current_addr = (uint64_t)addr[ch][s][sc][rk][bg][b][r]->cols[c];
         patterns[idx++] = (base_addr ^ current_addr);
     }
+
+
+    // for (int r=0; r<row_stride; r++)
+    // for (int c=0; c<col_stride; c++)
+    // for(int s=0; s<nslot; s++)
+    // for(int b=0; b<nba; b++)
+    // for(int bg=0; bg<nbg; bg++)
+    // for(int rk=0; rk<nrk; rk++)
+    // for(int sc=0; sc<nsc; sc++)
+    // for(int ch=0; ch<nch; ch++) {
+    //     uint64_t current_addr = (uint64_t)addr[ch][s][sc][rk][bg][b][r]->cols[c];
+    //     patterns[idx++] = (base_addr ^ current_addr);
+    // }
 
     // int numinterleavebg = 8;
 
@@ -447,8 +496,8 @@ pair<vector<uint64_t>,vector<int>> getPatternsRowHitUseVectors(vector<vector<int
     for (int c=0; c<col_stride; c++)
     for(int s : targets[1])
     for(int b : targets[5])
-    for(int rk : targets[3])
     for(int bg : targets[4])
+    for(int rk : targets[3])
     for(int sc : targets[2])
     for(int ch : targets[0]) {
         uint64_t current_addr = (uint64_t)addr[ch][s][sc][rk][bg][b][r]->cols[c];
@@ -492,8 +541,8 @@ pair<vector<uint64_t>,int> getPatternsRowMissUseVectors(vector<vector<int>> targ
     for (int r=0; r<row_stride; r++)
     for(int s : targets[1])
     for(int b : targets[5])
-    for(int rk : targets[3])
     for(int bg : targets[4])
+    for(int rk : targets[3])
     for(int sc : targets[2])
     for(int ch : targets[0]) {
         uint64_t current_addr = (uint64_t)addr[ch][s][sc][rk][bg][b][r]->cols[0];

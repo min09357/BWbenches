@@ -175,3 +175,30 @@ uint32_t next_pow2(uint32_t x) {
     if (x == 0) return 1;
     return 1U << (32 - __builtin_clz(x));
 }
+
+vector<int> make_indices(int n, int total) {
+    if (total < 0) {
+        throw invalid_argument("total must be non-negative");
+    }
+
+    long long count = n < 0 ? -(long long)n : (long long)n;
+
+    if (count > total) {
+        throw invalid_argument("abs(n) exceeds total size");
+    }
+
+    vector<int> v;
+    v.reserve((size_t)count);
+
+    if (n >= 0) {
+        for (int i = 0; i < n; ++i) {
+            v.push_back(i);
+        }
+    } else {
+        for (int i = total - 1; i >= total - count; --i) {
+            v.push_back(i);
+        }
+    }
+
+    return v;
+}

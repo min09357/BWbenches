@@ -29,7 +29,7 @@ min_cores = 3
 
 
 # Number of pointer chasing chains per core for pointer chasing benchmarks to saturate DRAM bandwidth. 
-num_chains_per_core = 32  
+num_chains_per_core = 64  
 
 
 
