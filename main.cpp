@@ -506,6 +506,88 @@ int main(int argc, char* argv[])
         }
 
 
+        else if (current_bench == "BW_ALL_BA3_HIT_PT_SINGLE") {
+            pair<vector<uint64_t>,vector<int>> pattern_pair = getPatternsRowHit(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,3);
+            vector<uint64_t> patterns = pattern_pair.first;
+            int row_stride = pattern_pair.second[0];
+            int col_stride = pattern_pair.second[1];
+            vector<uint64_t> stream = createBaseAddrsRowHit(row_stride,col_stride);
+            BenchResult res = measureBandwidth_withPattern(stream, patterns);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_ALL_BA3_HIT_PT_PERCORE") {
+            bool is_hit = true;
+            BenchResult res = measureBandwidth_withPattern_perCores(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,3, is_hit);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_ALL_BA3_MISS_PT_SINGLE") {
+            int col_stride = 1;
+            pair<vector<uint64_t>,int> pattern_pair = getPatternsRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,3, col_stride);
+            vector<uint64_t> patterns = pattern_pair.first;
+            int row_stride = pattern_pair.second;
+            vector<uint64_t> stream = createBaseAddrsRowMiss(row_stride, col_stride);
+            BenchResult res = measureBandwidth_withPattern(stream, patterns);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_ALL_BA3_MISS_PT_PERCORE") {
+            bool is_hit = false;
+            BenchResult res = measureBandwidth_withPattern_perCores(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,3, is_hit);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_ALL_BA3_RAND_PC_SINGLE" || current_bench == "BW_ALL_BA3_RAND_PC_PERCORE") {
+            vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, 3);
+            shuffle(stream.begin(), stream.end(), g_gen);
+            int chain_stride = 1;
+            BenchResult res = measureBandwidth_PointerChasing(stream, g_config.num_chains_per_core, chain_stride);
+            print_result(res);
+        }
+
+
+        else if (current_bench == "BW_ALL_BA1_HIT_PT_SINGLE") {
+            pair<vector<uint64_t>,vector<int>> pattern_pair = getPatternsRowHit(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,1);
+            vector<uint64_t> patterns = pattern_pair.first;
+            int row_stride = pattern_pair.second[0];
+            int col_stride = pattern_pair.second[1];
+            vector<uint64_t> stream = createBaseAddrsRowHit(row_stride,col_stride);
+            BenchResult res = measureBandwidth_withPattern(stream, patterns);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_ALL_BA1_HIT_PT_PERCORE") {
+            bool is_hit = true;
+            BenchResult res = measureBandwidth_withPattern_perCores(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,1, is_hit);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_ALL_BA1_MISS_PT_SINGLE") {
+            int col_stride = 1;
+            pair<vector<uint64_t>,int> pattern_pair = getPatternsRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,1, col_stride);
+            vector<uint64_t> patterns = pattern_pair.first;
+            int row_stride = pattern_pair.second;
+            vector<uint64_t> stream = createBaseAddrsRowMiss(row_stride, col_stride);
+            BenchResult res = measureBandwidth_withPattern(stream, patterns);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_ALL_BA1_MISS_PT_PERCORE") {
+            bool is_hit = false;
+            BenchResult res = measureBandwidth_withPattern_perCores(g_config.num_ch,g_config.num_slot,g_config.num_sc,g_config.num_rk,g_config.num_bg,1, is_hit);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_ALL_BA1_RAND_PC_SINGLE" || current_bench == "BW_ALL_BA1_RAND_PC_PERCORE") {
+            vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc, g_config.num_rk, g_config.num_bg, 1);
+            shuffle(stream.begin(), stream.end(), g_gen);
+            int chain_stride = 1;
+            BenchResult res = measureBandwidth_PointerChasing(stream, g_config.num_chains_per_core, chain_stride);
+            print_result(res);
+        }
+
+
         /////////////////////////////////////////////////////////////////////////
 
         else if (current_bench == "BW_R0_HIT_BASE_SINGLE") {
@@ -735,6 +817,88 @@ int main(int argc, char* argv[])
         }
 
 
+        else if (current_bench == "BW_R0_BA3_HIT_PT_SINGLE") {
+            pair<vector<uint64_t>,vector<int>> pattern_pair = getPatternsRowHit(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,3);
+            vector<uint64_t> patterns = pattern_pair.first;
+            int row_stride = pattern_pair.second[0];
+            int col_stride = pattern_pair.second[1];
+            vector<uint64_t> stream = createBaseAddrsRowHit(row_stride,col_stride);
+            BenchResult res = measureBandwidth_withPattern(stream, patterns);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_R0_BA3_HIT_PT_PERCORE") {
+            bool is_hit = true;
+            BenchResult res = measureBandwidth_withPattern_perCores(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,3, is_hit);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_R0_BA3_MISS_PT_SINGLE") {
+            int col_stride = 1;
+            pair<vector<uint64_t>,int> pattern_pair = getPatternsRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,3, col_stride);
+            vector<uint64_t> patterns = pattern_pair.first;
+            int row_stride = pattern_pair.second;
+            vector<uint64_t> stream = createBaseAddrsRowMiss(row_stride, col_stride);
+            BenchResult res = measureBandwidth_withPattern(stream, patterns);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_R0_BA3_MISS_PT_PERCORE") {
+            bool is_hit = false;
+            BenchResult res = measureBandwidth_withPattern_perCores(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,3, is_hit);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_R0_BA3_RAND_PC_SINGLE" || current_bench == "BW_R0_BA3_RAND_PC_PERCORE") {
+            vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc,1, g_config.num_bg, 3);
+            shuffle(stream.begin(), stream.end(), g_gen);
+            int chain_stride = 1;
+            BenchResult res = measureBandwidth_PointerChasing(stream, g_config.num_chains_per_core, chain_stride);
+            print_result(res);
+        }
+
+
+        else if (current_bench == "BW_R0_BA1_HIT_PT_SINGLE") {
+            pair<vector<uint64_t>,vector<int>> pattern_pair = getPatternsRowHit(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,1);
+            vector<uint64_t> patterns = pattern_pair.first;
+            int row_stride = pattern_pair.second[0];
+            int col_stride = pattern_pair.second[1];
+            vector<uint64_t> stream = createBaseAddrsRowHit(row_stride,col_stride);
+            BenchResult res = measureBandwidth_withPattern(stream, patterns);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_R0_BA1_HIT_PT_PERCORE") {
+            bool is_hit = true;
+            BenchResult res = measureBandwidth_withPattern_perCores(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,1, is_hit);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_R0_BA1_MISS_PT_SINGLE") {
+            int col_stride = 1;
+            pair<vector<uint64_t>,int> pattern_pair = getPatternsRowMiss(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,1, col_stride);
+            vector<uint64_t> patterns = pattern_pair.first;
+            int row_stride = pattern_pair.second;
+            vector<uint64_t> stream = createBaseAddrsRowMiss(row_stride, col_stride);
+            BenchResult res = measureBandwidth_withPattern(stream, patterns);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_R0_BA1_MISS_PT_PERCORE") {
+            bool is_hit = false;
+            BenchResult res = measureBandwidth_withPattern_perCores(g_config.num_ch,g_config.num_slot,g_config.num_sc,1,g_config.num_bg,1, is_hit);
+            print_result(res);
+        }
+
+        else if (current_bench == "BW_R0_BA1_RAND_PC_SINGLE" || current_bench == "BW_R0_BA1_RAND_PC_PERCORE") {
+            vector<void*> stream = createStreamRowHit(g_config.num_ch, g_config.num_slot, g_config.num_sc,1, g_config.num_bg, 1);
+            shuffle(stream.begin(), stream.end(), g_gen);
+            int chain_stride = 1;
+            BenchResult res = measureBandwidth_PointerChasing(stream, g_config.num_chains_per_core, chain_stride);
+            print_result(res);
+        }
+
+
 
 
 
@@ -848,6 +1012,9 @@ int main(int argc, char* argv[])
             // print_result(res);
         }
 
+        else {
+            cerr << "[ERROR] Benchmark registered but no dispatch branch: " << current_bench << endl;
+        }
 
 
 

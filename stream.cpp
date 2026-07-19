@@ -185,28 +185,22 @@ pair<vector<uint64_t>,vector<int>> getPatternsRowHit(int nch, int nslot, int nsc
     // int threshold = 4096;
     int threshold = 256;
     // int threshold = 64;
-    int num_patterns = abs(nch * nslot * nsc * nrk * nbg * nba);
-    if (__builtin_popcount(num_patterns) != 1) {
-        cerr << "Invalid pattern. Num patterns should be power of 2." << endl;
-        exit(1);
-    }
-    int row_stride = 1;
-    int col_stride = 1;
-    if (num_patterns >= threshold) {
+    int base_count   = abs(nch * nslot * nsc * nrk * nbg * nba);
+    int col_cap      = (int)g_config.max_col_idx;   // uint64_t -> int, avoid narrowing warning
+    int row_stride   = 1;
+    int col_stride   = 1;
+    int num_patterns = base_count;
+
+    if (base_count >= threshold) {
         cout << "num_patterns is " << num_patterns << endl;
     }
-    else if (threshold/num_patterns <= g_config.max_col_idx) {
-        cout << "num_patterns is changed from " << num_patterns << " to " << threshold << endl;
-        col_stride = threshold / num_patterns;
-        num_patterns = threshold;
-        cout << "row_stride: " << row_stride << " col_stride: " << col_stride << endl;
-
-    }
     else {
-        cout << "num_patterns is changed from " << num_patterns << " to " << threshold << endl;
-        row_stride = threshold/num_patterns/g_config.max_col_idx;
-        col_stride = g_config.max_col_idx;
-        num_patterns = threshold;
+        int need   = (threshold + base_count - 1) / base_count;   // ceil(threshold / base_count)
+        col_stride = (int)ceil_pow2((uint32_t)need);
+        if (col_stride > col_cap) col_stride = col_cap;
+        row_stride = (int)ceil_pow2((uint32_t)((need + col_stride - 1) / col_stride));
+        num_patterns = base_count * col_stride * row_stride;
+        cout << "num_patterns is changed from " << base_count << " to " << num_patterns << endl;
         cout << "row_stride: " << row_stride << " col_stride: " << col_stride << endl;
     }
 
@@ -287,19 +281,17 @@ pair<vector<uint64_t>,int> getPatternsRowMiss(int nch, int nslot, int nsc, int n
     // int threshold = 4096;
     int threshold = 256;
     // int threshold = 64;
-    int num_patterns = abs(nch * nslot * nsc * nrk * nbg * nba * col_stride);
-    if (__builtin_popcount(num_patterns) != 1) {
-        cerr << "Invalid pattern. Num patterns should be power of 2." << endl;
-        exit(1);
-    }
-    int row_stride = 1;
-    if (num_patterns >= threshold) {
+    int base_count   = abs(nch * nslot * nsc * nrk * nbg * nba * col_stride);
+    int row_stride   = 1;
+    int num_patterns = base_count;
+
+    if (base_count >= threshold) {
         cout << "num_patterns is " << num_patterns << endl;
     }
     else {
-        cout << "num_patterns is changed from " << num_patterns << " to " << threshold << endl;
-        row_stride = threshold/num_patterns;
-        num_patterns = threshold;
+        row_stride = (int)ceil_pow2((uint32_t)((threshold + base_count - 1) / base_count));
+        num_patterns = base_count * row_stride;
+        cout << "num_patterns is changed from " << base_count << " to " << num_patterns << endl;
         cout << "row_stride: " << row_stride << endl;
     }
 

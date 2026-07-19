@@ -176,6 +176,12 @@ uint32_t next_pow2(uint32_t x) {
     return 1U << (32 - __builtin_clz(x));
 }
 
+// Smallest power of 2 that is >= x (unlike next_pow2 which is strictly >).
+uint32_t ceil_pow2(uint32_t x) {
+    if (x <= 1) return 1;
+    return 1U << (32 - __builtin_clz(x - 1));
+}
+
 vector<int> make_indices(int n, int total) {
     if (total < 0) {
         throw invalid_argument("total must be non-negative");

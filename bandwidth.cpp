@@ -467,9 +467,13 @@ BenchResult measureBandwidth_withPattern(const vector<uint64_t>& stream, const v
     double best_dev = 0;
 
     size_t stream_size = stream.size();
-    size_t pattern_size = pattern.size();  // power of 2
+    size_t pattern_size = pattern.size();  // power of 2 for BA2/SC/etc, non-pow2 for BA3
+    bool pattern_is_pow2 = (pattern_size & (pattern_size - 1)) == 0;
+    
+    // pattern_is_pow2 = false;
+
     size_t pattern_mask = pattern_size - 1;
-    int pattern_bits = __builtin_ctzll(pattern_size);
+    int pattern_bits = pattern_is_pow2 ? __builtin_ctzll(pattern_size) : 0;
     size_t total_elements = stream_size * pattern_size;
 
     if (g_config.verbose_output) {
@@ -533,10 +537,22 @@ BenchResult measureBandwidth_withPattern(const vector<uint64_t>& stream, const v
 
                 // #pragma omp barrier
 
-                for (size_t si = tid; si < total_elements; si+=nthreads) {
-                    size_t stream_idx = si >> pattern_bits;
-                    size_t pattern_idx = si & pattern_mask;
-                    *(volatile uint64_t*)(stream[stream_idx] ^ pattern[pattern_idx]);
+                if (pattern_is_pow2) {
+                    for (size_t si = tid; si < total_elements; si+=nthreads) {
+                        size_t stream_idx = si >> pattern_bits;
+                        size_t pattern_idx = si & pattern_mask;
+                        *(volatile uint64_t*)(stream[stream_idx] ^ pattern[pattern_idx]);
+                    }
+                } else {
+                    // Same visit order as the pow2 path, but decompose si without
+                    // shift/mask since pattern_size is not a power of 2 (e.g. BA3 = 384).
+                    size_t stream_idx  = (size_t)tid / pattern_size;
+                    size_t pattern_idx = (size_t)tid % pattern_size;
+                    for (size_t si = tid; si < total_elements; si+=nthreads) {
+                        *(volatile uint64_t*)(stream[stream_idx] ^ pattern[pattern_idx]);
+                        pattern_idx += nthreads;
+                        while (pattern_idx >= pattern_size) { pattern_idx -= pattern_size; stream_idx++; }
+                    }
                 }
 
 
