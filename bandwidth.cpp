@@ -544,14 +544,17 @@ BenchResult measureBandwidth_withPattern(const vector<uint64_t>& stream, const v
                         *(volatile uint64_t*)(stream[stream_idx] ^ pattern[pattern_idx]);
                     }
                 } else {
-                    // Same visit order as the pow2 path, but decompose si without
-                    // shift/mask since pattern_size is not a power of 2 (e.g. BA3 = 384).
+                    // Same visit order as the pow2 path (bit-identical), but with no
+                    // per-access branch: the pattern-wrap carry is hoisted to once per
+                    // stream row. pattern_size is not a power of 2 here (e.g. BA3 = 384).
+                    // Requires nthreads <= pattern_size (always true: nthreads<=cores, pattern_size>=256).
                     size_t stream_idx  = (size_t)tid / pattern_size;
                     size_t pattern_idx = (size_t)tid % pattern_size;
-                    for (size_t si = tid; si < total_elements; si+=nthreads) {
-                        *(volatile uint64_t*)(stream[stream_idx] ^ pattern[pattern_idx]);
-                        pattern_idx += nthreads;
-                        while (pattern_idx >= pattern_size) { pattern_idx -= pattern_size; stream_idx++; }
+                    while (stream_idx < stream_size) {
+                        for (; pattern_idx < pattern_size; pattern_idx += nthreads)
+                            *(volatile uint64_t*)(stream[stream_idx] ^ pattern[pattern_idx]);
+                        pattern_idx -= pattern_size;   // carry: [P, P+nthreads) -> [0, nthreads)
+                        stream_idx++;
                     }
                 }
 

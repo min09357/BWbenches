@@ -4,3 +4,5 @@ benches
 .claude
 results.txt
 results/
+config.py
+__pycache__/

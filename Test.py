@@ -1,170 +1,99 @@
 #!/usr/bin/env python3
-import sys
-import subprocess
 import os
+import re
+import subprocess
+import sys
+
+import config
+import dram_mapping
+
+# Regex for the benches output line: " - Avg Usage : <value> %"
+AVG_USAGE_RE = re.compile(r"-\s*Avg Usage\s*:\s*([\d.]+)\s*%")
 
 
-# Not CPU frequency fixed by user, but the base frequency of the CPU.
-# cpu_base_freq   = "2.0" 
-# cpu_base_freq   = "2.4" 
-cpu_base_freq   = "3.7" 
+def run_benches(cmd, record, record_file):
+    """Run the benches command. When `record` is True, stream its output to both
+    the console and `record_file` (tee), then return the list of Avg Usage values
+    found in order. When False, just run it and return an empty list."""
+    if not record:
+        subprocess.run(cmd, check=True)
+        return []
 
-# dram_bw    = "23.464" # GB/s
-dram_bw    = "38.4" # GB/s
-# dram_bw    = "44.8" # GB/s
-
-
-# If your system has multiple NUMA nodes, set numa_stride to 2.
-# Check numactl -H
-# node 0 cpus: 0 1 2 3 ... => numa_stride = 1
-# node 0 cpus: 0 2 4 6 ... => numa_stride = 2
-numa_stride = 1
-# numa_stride = 2
-
-
-
-# If True, it will run the benchmark multiple times, increasing the number of cores used each time (starting from n core up to NUM_CORES). 
-# False, it will run the benchmark only once with the specified number of cores.
-sweep_cores = True 
-# sweep_cores = False 
-
-# Minimum number of cores to start with when sweep_cores is True. 
-min_cores = 3   
-
-
-# Number of pointer chasing chains per core for pointer chasing benchmarks to saturate DRAM bandwidth. 
-num_chains_per_core = 32 
+    os.makedirs(os.path.dirname(record_file) or ".", exist_ok=True)
+    usages = []
+    with open(record_file, "w") as f:
+        proc = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        )
+        for line in proc.stdout:
+            sys.stdout.write(line)
+            sys.stdout.flush()
+            f.write(line)
+            m = AVG_USAGE_RE.search(line)
+            if m:
+                usages.append(m.group(1))
+        ret = proc.wait()
+    if ret != 0:
+        raise subprocess.CalledProcessError(ret, cmd)
+    return usages
 
 
+def append_usage_csv(record_file, benchstring, usages):
+    """Append one comma-joined Avg Usage row to the .csv sibling of record_file,
+    writing the benchstring header once when the CSV is first created."""
+    if not usages:
+        print(f"No 'Avg Usage' values found; skipping CSV update.")
+        return
+    csv_file = os.path.splitext(record_file)[0] + ".csv"
+    new_file = not os.path.exists(csv_file)
+    with open(csv_file, "a") as f:
+        if new_file:
+            f.write(benchstring + "\n")
+        f.write(",".join(usages) + "\n")
+    print("========================================================")
+    print(f"Appended Avg Usage row to {csv_file}:")
+    print(",".join(usages))
+    print("========================================================")
 
-verbose_output = True 
-
-
-chunk_size = 1  # Not used in the current version
-
-
-
-extra_args = []
 
 def main():
-    if len(sys.argv) != 5:
-        print(f"Usage: {sys.argv[0]} <node_id> [num_cores] [num_pages] <bench_option>")
-        print(f"Example: {sys.argv[0]} 0 4 8 BW_ALL,BW_ALL_RM")
-        print(f"Example: {sys.argv[0]} 0 all 8 BW_ALL,BW_ALL_RM")
+    node_id     = int(config.NUMA_NODE)
+    num_cores   = str(config.NUM_CORES)
+    num_pages   = str(config.NUM_PAGES)
+    benchstring = ",".join(config.benchlist)
+
+    if not benchstring:
+        print("Error: config.benchlist is empty.")
         sys.exit(1)
 
-    node_id   = int(sys.argv[1])
-    num_cores = sys.argv[2]
-    num_pages = sys.argv[3]
-    bench     = sys.argv[4]
+    try:
+        masks = dram_mapping.PROFILES[config.ADDR_PROFILE]
+    except KeyError:
+        print(f"Error: unknown ADDR_PROFILE '{config.ADDR_PROFILE}'.")
+        print(f"Available profiles: {', '.join(sorted(dram_mapping.PROFILES))}")
+        sys.exit(1)
 
+    # Prime sudo so the benches run below doesn't stall on a password prompt.
     subprocess.run(["sudo", "echo", ""], check=True)
-    
-    # subprocess.run(["bash", os.path.expanduser("~/setting.sh")], check=True)
 
-    
-    if node_id == 0:
-        # Total number of 1G Hugepages in node
-        # Note: This is not the number of pages to use, but the total number of pages available in node. Check grub file.
-        # pool_size = 20  
-
-        pool_size = 16  
-
-
-        # 0x0 if only one CH/DIMM/SCH/RANK
-
-
-        # # Arrow 1R
-        # ch_func   = "0x0"
-        # slot_func = "0x0"
-        # sch_func  = "0x82600"
-        # rank_func = "0x0"
-
-        # bg_func   = "0x42102100,0x84204000,0x108408000"
-        # ba_func    = "0x210850000,0x210a0000"
-
-        # col_mask  = "0x1bc0"
-        # row_mask  = "0x3fffc0000"
-
-
-        # Arrow 2R
-        ch_func   = "0x0"
-        slot_func = "0x0"
-        sch_func  = "0x82600"
-        rank_func = "0x42120000"
-
-        bg_func   = "0x84042100,0x108404000,0x210808000"
-        ba_func    = "0x421090000,0x240000"
-
-        col_mask  = "0x1bc0"
-        row_mask  = "0x7fff80000"
-
-
-        # # Cascade 2R
-        # ch_func   = "0x0"
-        # slot_func = "0x0"
-        # sch_func  = "0x0"
-        # rank_func = "0x2000"
-
-        # bg_func   = "0x40,0x40000"
-        # ba_func    = "0x80000,0x100000"
-
-        # col_mask  = "0x5f80"
-        # row_mask  = "0x7ffe38000"
-
-
-        # # SPR 2R
-        # ch_func   = "0x0"
-        # slot_func = "0x0"
-        # sch_func  = "0x40"
-        # rank_func = "0x80"
-
-        # bg_func   = "0x10000100,0x20000200,0x100001400"
-        # ba_func    = "0x40000800,0x80001000"
-
-        # col_mask  = "0xfe000"
-        # row_mask  = "0xffff00000"
-
-
-    # elif node_id == 1:
-        # # Total number of 1G Hugepages in node
-        # pool_size = 20  
-
-        # # 0x0 if only one CH/DIMM/SCH/RANK
-        # ch_func   = "0x0"
-        # slot_func = "0x0"
-        # sch_func  = "0x82600"
-        # rank_func = "0x42120000"
-
-        # bg_func   = "0x84042100,0x108404000,0x210808000"
-        # ba_func    = "0x421090000,0x240000"
-
-        # col_mask  = "0x1bc0"
-        # row_mask  = "0x7fff80000"
-    else:
-        print("Error: Only node 0, 1 is supported.")
-        sys.exit(1)
-
-    max_core   = os.cpu_count() - 1
-    
-    core_list  = []
-
+    max_core = os.cpu_count() - 1
     if num_cores.lower() == "all":
         print("Use all cores")
         end_core = max_core
     else:
-        end_core = node_id + numa_stride * (int(num_cores) - 1)
+        end_core = node_id + config.numa_stride * (int(num_cores) - 1)
         if end_core > max_core:
-            print(f"Error: Requested cores exceed available cores. Num cores in system: {max_core + 1}")
+            print(f"Error: Requested cores exceed available cores. "
+                  f"Num cores in system: {max_core + 1}")
             sys.exit(1)
 
-    core_list = list(range(node_id, end_core + 1, numa_stride))
-
+    core_list = list(range(node_id, end_core + 1, config.numa_stride))
     core_list_str = ",".join(str(c) for c in core_list)
 
-    if sweep_cores:
+    extra_args = []
+    if config.sweep_cores:
         extra_args.append("-a")
-    if verbose_output:
+    if config.verbose_output:
         extra_args.append("-v")
 
     subprocess.run(["make", "clean"], check=True)
@@ -176,34 +105,38 @@ def main():
         "-m", str(node_id),
         "-C", core_list_str,
         "./benches",
-        "--num_pages",        str(num_pages),
-        "--bench",            bench,
-        "--channel_functions", ch_func,
-        "--slot_functions",   slot_func,
-        "--sub_ch_functions", sch_func,
-        "--rank_functions",   rank_func,
-        "--bankgroup_functions", bg_func,
-        "--bank_functions",   ba_func,
-        "--column_bitmask",   col_mask,
-        "--row_bitmask",      row_mask,
-        "--chunk",            str(chunk_size),
-        "--pool_size",        str(pool_size),
-        "--cpu_frequency",    cpu_base_freq,
-        "--DRAM_bandwidth",   dram_bw,
-        "--NUMA_node",        str(node_id),
-        "--NUMA_stride",      str(numa_stride),
-        "--num_chains_per_core", str(num_chains_per_core),
-        "--min_cores",        str(min_cores),
+        "--num_pages",           num_pages,
+        "--bench",               benchstring,
+        "--channel_functions",   masks["ch_func"],
+        "--slot_functions",      masks["slot_func"],
+        "--sub_ch_functions",    masks["sch_func"],
+        "--rank_functions",      masks["rank_func"],
+        "--bankgroup_functions", masks["bg_func"],
+        "--bank_functions",      masks["ba_func"],
+        "--column_bitmask",      masks["col_mask"],
+        "--row_bitmask",         masks["row_mask"],
+        "--chunk",               str(config.chunk_size),
+        "--pool_size",           str(config.pool_size),
+        "--cpu_frequency",       str(config.cpu_base_freq),
+        "--DRAM_bandwidth",      str(config.dram_bw),
+        "--NUMA_node",           str(node_id),
+        "--NUMA_stride",         str(config.numa_stride),
+        "--num_chains_per_core", str(config.num_chains_per_core),
+        "--min_cores",           str(config.min_cores),
         *extra_args,
     ]
 
     print("--------------------------------------------------------")
-    print(f"Target Node: {node_id} (Cores: {num_cores})")
+    print(f"Target Node: {node_id} (Cores: {num_cores}, Profile: {config.ADDR_PROFILE})")
     print("Executing Command:")
     print(" ".join(cmd))
     print("--------------------------------------------------------")
 
-    subprocess.run(cmd, check=True)
+    record = bool(config.ISRECORD)
+    usages = run_benches(cmd, record, config.RECORDFILE)
+    if record:
+        append_usage_csv(config.RECORDFILE, benchstring, usages)
+
 
 if __name__ == "__main__":
     main()
